@@ -45,15 +45,13 @@ def LoadModel(task_name, model_name):
     else:
         num_labels = 2  # 2分类
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_name, num_labels=num_labels)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
     print("[Notice]: tokenizer and model loaded.")
     print("-" * 50)
     return tokenizer, model
 
 
 def Tokenize(task_name, tokenizer, raw_dataset):
-    # 数据预处理
     print("-" * 13, "tokenize the dataset", "-" * 13)
     print("[Notice]: tokenizing the dataset...")
     sentence1_key, sentence2_key = TASKS_TO_KEYS[task_name]
@@ -86,12 +84,9 @@ def MakeDataloader(tokenized_dataset, task_name, tokenizer, BATCH_SIZE):
         test_dataset = tokenized_dataset["test"]
     # 创建dataloader
     data_collator = DataCollatorWithPadding(tokenizer)
-    train_dataloader = DataLoader(
-        train_dataset, collate_fn=data_collator, shuffle=True, batch_size=BATCH_SIZE)
-    eval_dataloader = DataLoader(
-        val_dataset, collate_fn=data_collator, batch_size=BATCH_SIZE)
-    test_dataloader = DataLoader(
-        test_dataset, collate_fn=data_collator, batch_size=BATCH_SIZE)
+    train_dataloader = DataLoader(train_dataset, collate_fn=data_collator, shuffle=True, batch_size=BATCH_SIZE)
+    eval_dataloader = DataLoader(val_dataset, collate_fn=data_collator, batch_size=BATCH_SIZE)
+    test_dataloader = DataLoader(test_dataset, collate_fn=data_collator, batch_size=BATCH_SIZE)
     print("[Notice]: make dataloader is done.")
     print("-" * 50)
     return (train_dataloader, eval_dataloader, test_dataloader)
@@ -102,6 +97,5 @@ def preprocess(task_name, model_name, BATCH_SIZE, SEED):
     raw_dataset, metric = LoadDataset(task_name)
     tokenizer, model = LoadModel(task_name, model_name)
     tokenized_dataset = Tokenize(task_name, tokenizer, raw_dataset)
-    dataloader = MakeDataloader(
-        tokenized_dataset, task_name, tokenizer, BATCH_SIZE)
+    dataloader = MakeDataloader(tokenized_dataset, task_name, tokenizer, BATCH_SIZE)
     return model, dataloader, metric
