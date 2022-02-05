@@ -26,8 +26,8 @@ def LoadDataset(task_name):
     print("-" * 18, "load dataset", "-" * 18)
     print("[Notice]: loading dataset...")
     actual_task = HUGGINGFACE_GLUE_TASKS[GLUE_TASKS.index(task_name)]
-    raw_dataset = load_dataset("glue", actual_task)
-    metric = load_metric("glue", actual_task)
+    raw_dataset = load_dataset("datasets/glue", actual_task)
+    metric = load_metric("metrics/glue", actual_task)
     print("[Notice]: dataset", actual_task, "loaded.")
     print("-" * 50)
     return raw_dataset, metric
