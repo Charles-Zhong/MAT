@@ -97,6 +97,7 @@ print("beta:", beta, file=file)
 print("*"*50, file=file)
 model.to(device)
 progress_bar = tqdm(range(epochs * len(train_dataloader)))
+progress_bar.set_description("Training...")
 eval_metric_list = []
 for i in range(epochs):
     print("-"*20, "EPOCH:", i, "-"*20, file=file)
@@ -140,7 +141,6 @@ for i in range(epochs):
             loss_adv.backward()
             ### SGLD采样
             delta.data = SGLD(delta.data, - delta.grad.data, delta.size(), sampling_step_delta, sampling_noise_delta)
-            delta.requires_grad = True
             ### 更新扰动的分布均值
             mean_delta = beta * mean_delta + (1 - beta) * delta
 
@@ -151,7 +151,11 @@ for i in range(epochs):
                 if p.grad!=None:
                     p.grad.zero_()
             ### 构造带有扰动的输入
-            inputs["inputs_embeds"] = mean_delta.detach() + word_embedding.detach()
+            if "bert-" in model_name:
+                word_embedding = model.bert.embeddings.word_embeddings(batch["input_ids"])
+            elif "roberta-" in model_name:
+                word_embedding = model.roberta.embeddings.word_embeddings(batch["input_ids"])
+            inputs["inputs_embeds"] = mean_delta + word_embedding
             ### 前向传播
             loss_sum = model(**batch).loss + lambda_s * ls(model(**inputs).logits, model(**batch).logits)
             ### 反向传播
