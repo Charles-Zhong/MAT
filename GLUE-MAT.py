@@ -1,6 +1,6 @@
-import torch
 import math
 import time
+import torch
 import argparse
 import preprocess
 import perturbation
@@ -118,7 +118,7 @@ for i in range(epochs):
         ## 1.2 初始化[抽样扰动delta_k]和[分布扰动mean_delta]
         delta = perturbation.init_delta(word_embedding.size(), epsilon=adv_init_epsilon, init_type=adv_init_type)
         delta.requires_grad = True
-        mean_delta = delta  # 初始化delta的分布均值mean_delta
+        mean_delta = delta.detach().clone()  # 初始化delta的分布均值mean_delta
 
         ## 1.3 初始化模型输入inputs
         if "bert-" in model_name:  # bert模型输入inputs: "attention_mask","labels","token_type_ids",「inputs_embeds」和「input_ids」参数二选一
@@ -140,10 +140,11 @@ for i in range(epochs):
             ### 反向传播
             loss_adv.backward()
             ### SGLD采样
-            delta.data = SGLD(delta.data, - delta.grad.data, delta.size(), sampling_step_delta, sampling_noise_delta)
+            delta.data = SGLD(delta.data, - delta.grad, sampling_step_delta, sampling_noise_delta)
+            delta.grad = None
             ### 更新扰动的分布均值
-            mean_delta = beta * mean_delta + (1 - beta) * delta
-
+            mean_delta.data = beta * mean_delta.data + (1 - beta) * delta.data
+            
         ## 2.2 sampling model parameters (theta)
         for k in range(sampling_times_theta):
             ### 清空模型参数的梯度
@@ -155,14 +156,14 @@ for i in range(epochs):
                 word_embedding = model.bert.embeddings.word_embeddings(batch["input_ids"])
             elif "roberta-" in model_name:
                 word_embedding = model.roberta.embeddings.word_embeddings(batch["input_ids"])
-            inputs["inputs_embeds"] = mean_delta + word_embedding
+            inputs["inputs_embeds"] = mean_delta.detach() + word_embedding
             ### 前向传播
             loss_sum = model(**batch).loss + lambda_s * ls(model(**inputs).logits, model(**batch).logits)
             ### 反向传播
             loss_sum.backward()
             ### SGLD采样
             for p in model.parameters():
-                p.data = SGLD(p.data, p.grad.data, p.size(), sampling_step_theta, sampling_noise_theta)
+                p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta)
             ### 更新模型参数的分布均值
             new_model_param = model.state_dict()
             for name in mean_theta:
