@@ -109,22 +109,22 @@ for i in range(epochs):
 
         # [begin] MAT Training
         # 1.init delta & inputs
-        ## 1.1 获得batch的word_embedding
+        ## 1.1 初始化模型输入inputs
+        if "bert-" in model_name:  # bert模型输入inputs: "attention_mask","labels","token_type_ids",「inputs_embeds」和「input_ids」参数二选一
+            inputs = {"attention_mask": batch["attention_mask"],"labels": batch["labels"], "token_type_ids": batch["token_type_ids"]}
+        elif "roberta-" in model_name:  # roberta模型输入inputs: "attention_mask","labels",「inputs_embeds」和「input_ids」参数二选一
+            inputs = {"attention_mask": batch["attention_mask"], "labels": batch["labels"]}
+
+        ## 1.2 获得batch的word_embedding
         if "bert-" in model_name:
             word_embedding = model.bert.embeddings.word_embeddings(batch["input_ids"])
         elif "roberta-" in model_name:
             word_embedding = model.roberta.embeddings.word_embeddings(batch["input_ids"])
         
-        ## 1.2 初始化[抽样扰动delta_k]和[分布扰动mean_delta]
-        delta = perturbation.init_delta(word_embedding.size(), epsilon=adv_init_epsilon, init_type=adv_init_type)
+        ## 1.3 初始化[抽样扰动delta]和[扰动分布均值mean_delta]
+        delta = perturbation.init_delta(word_embedding.size(), adv_init_epsilon, adv_init_type)
         delta.requires_grad = True
-        mean_delta = delta.detach().clone()  # 初始化delta的分布均值mean_delta
-
-        ## 1.3 初始化模型输入inputs
-        if "bert-" in model_name:  # bert模型输入inputs: "attention_mask","labels","token_type_ids",「inputs_embeds」和「input_ids」参数二选一
-            inputs = {"attention_mask": batch["attention_mask"],"labels": batch["labels"], "token_type_ids": batch["token_type_ids"]}
-        elif "roberta-" in model_name:  # roberta模型输入inputs: "attention_mask","labels",「inputs_embeds」和「input_ids」参数二选一
-            inputs = {"attention_mask": batch["attention_mask"], "labels": batch["labels"]}
+        mean_delta = delta.clone().detach()  # 初始化delta的分布均值mean_delta
 
         ## 1.4 备份模型参数
         back_parameters = model.state_dict()
@@ -161,18 +161,15 @@ for i in range(epochs):
             loss_sum = model(**batch).loss + lambda_s * ls(model(**inputs).logits, model(**batch).logits)
             ### 反向传播
             loss_sum.backward()
-            ### SGLD采样
-            for p in model.parameters():
-                p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta)
-            ### 更新模型参数的分布均值
-            new_model_param = model.state_dict()
-            for key in mean_theta:
-                mean_theta[key] = beta * mean_theta[key] + (1 - beta) * new_model_param[key]
-
+            ### SGLD采样并更新分布均值
+            for name, p in model.named_parameters():
+                p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta) # 将模型参数更新为新的采样
+                mean_theta[name] = beta * mean_theta[name] + (1 - beta) * p.data # 更新模型参数的分布均值 
+                          
         # 3.update model parameters
         for key in back_parameters:
-            back_parameters[key] = beta * back_parameters[key] + (1 - beta) * mean_theta[key]
-        model.load_state_dict(back_parameters) # 更新这次迭代的模型参数
+            back_parameters[key] = beta * back_parameters[key] + (1 - beta) * mean_theta[key] # 调整备份的模型参数
+        model.load_state_dict(back_parameters) # 将模型参数更新为这次迭代的模型参数
         # [end] MAT Training
         progress_bar.update(1)
 
