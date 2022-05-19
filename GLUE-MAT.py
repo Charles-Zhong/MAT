@@ -63,8 +63,8 @@ def ls(P, Q):
     elif(task_type == "regression"):
         return MSELoss(P, Q, reduction="sum")
 
-def SGLD(z, grad, size, step, epsilon):
-    noise = perturbation.init_delta(size, epsilon=epsilon, init_type="randn")
+def SGLD(z, grad, step, epsilon):
+    noise = perturbation.init_delta(z.size(), epsilon=epsilon, init_type="randn")
     z = z - step * grad + math.sqrt(2 * step) * noise
     return z
 
@@ -141,10 +141,10 @@ for i in range(epochs):
             loss_adv.backward()
             ### SGLD采样
             delta.data = SGLD(delta.data, - delta.grad, sampling_step_delta, sampling_noise_delta)
-            delta.grad = None
+            delta.grad.zero_()
             ### 更新扰动的分布均值
             mean_delta.data = beta * mean_delta.data + (1 - beta) * delta.data
-            
+
         ## 2.2 sampling model parameters (theta)
         for k in range(sampling_times_theta):
             ### 清空模型参数的梯度
@@ -152,7 +152,7 @@ for i in range(epochs):
                 if p.grad!=None:
                     p.grad.zero_()
             ### 构造带有扰动的输入
-            if "bert-" in model_name:
+            if "bert-" in model_name: # 每次backward()会丢失word_embedding的计算图，因此需要每次计算一遍word_embedding
                 word_embedding = model.bert.embeddings.word_embeddings(batch["input_ids"])
             elif "roberta-" in model_name:
                 word_embedding = model.roberta.embeddings.word_embeddings(batch["input_ids"])
@@ -166,12 +166,12 @@ for i in range(epochs):
                 p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta)
             ### 更新模型参数的分布均值
             new_model_param = model.state_dict()
-            for name in mean_theta:
-                mean_theta[name] = beta * mean_theta[name] + (1 - beta) * new_model_param[name]
+            for key in mean_theta:
+                mean_theta[key] = beta * mean_theta[key] + (1 - beta) * new_model_param[key]
 
         # 3.update model parameters
-        for name in back_parameters:
-            back_parameters[name] = beta * back_parameters[name] + (1 - beta) * mean_theta[name]
+        for key in back_parameters:
+            back_parameters[key] = beta * back_parameters[key] + (1 - beta) * mean_theta[key]
         model.load_state_dict(back_parameters) # 更新这次迭代的模型参数
         # [end] MAT Training
         progress_bar.update(1)
