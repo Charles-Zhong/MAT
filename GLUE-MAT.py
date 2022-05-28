@@ -2,8 +2,8 @@ import math
 import time
 import torch
 import argparse
-import preprocess
-import perturbation
+from utils import preprocess
+from utils import perturbation
 from torch.nn import MSELoss
 import torch.nn.functional as F
 from tqdm.auto import tqdm
@@ -24,7 +24,8 @@ def parse_args():
     parser.add_argument("--sampling_step_theta", type=float, default=3e-5, help="Stochastic gradient langevin dynamics sampling step for model parameters.")
     parser.add_argument("--sampling_step_delta", type=float, default=1e-3, help="Stochastic gradient langevin dynamics sampling step for adversarial perturbation.")
     parser.add_argument("--lambda_s", type=float, default=1, help="Tuning parameter lambda of the objective function.")
-    parser.add_argument("--beta", type=float, default=0.1, help="Exponential damping beta for stability in Stochastic gradient langevin dynamics sampling and parameter updating.")
+    parser.add_argument("--beta_s", type=float, default=0.1, help="Exponential damping beta for stability in stochastic gradient langevin dynamics sampling.")
+    parser.add_argument("--beta_p", type=float, default=0.9, help="Exponential damping beta for stability in parameters updating.")
     args = parser.parse_args()
     return args
 
@@ -50,11 +51,13 @@ sampling_noise_delta = args.sampling_noise_delta # delta采样噪声
 sampling_step_theta = args.sampling_step_theta # theta采样步长
 sampling_step_delta = args.sampling_step_delta # theta采样步长
 lambda_s = args.lambda_s # lambda λ
-beta = args.beta # beta β
+beta_s = args.beta_s # beta β_sampling
+beta_p = args.beta_p # beta β_parameters updating
 
 # 加载模型训练集
 model, dataloader, metric= preprocess.preprocess(task_name, model_name, batch_size, seed)
 train_dataloader,eval_dataloader,test_dataloader = dataloader
+iterations = epochs * len(train_dataloader)
 
 def ls(P, Q):
     task_type = "classification" if task_name != "STS-B" else "regression"
@@ -65,6 +68,7 @@ def ls(P, Q):
 
 def SGLD(z, grad, step, epsilon):
     noise = perturbation.init_delta(z.size(), epsilon=epsilon, init_type="randn")
+    #z = z - step * (iterations-ite)/iterations * grad + math.sqrt(2 * step) * noise
     z = z - step * grad + math.sqrt(2 * step) * noise
     return z
 
@@ -93,12 +97,14 @@ print("Sampling_noise_delta:", sampling_noise_delta, file=file)
 print("Sampling_step_theta:", sampling_step_theta, file=file)
 print("Sampling_step_delta:", sampling_step_delta, file=file)
 print("lambda:", lambda_s, file=file)
-print("beta:", beta, file=file)
+print("beta_s:", beta_s, file=file)
+print("beta_p:", beta_p, file=file)
 print("*"*50, file=file)
 model.to(device)
-progress_bar = tqdm(range(epochs * len(train_dataloader)))
+progress_bar = tqdm(range(iterations))
 progress_bar.set_description("Training...")
 eval_metric_list = []
+ite = 0
 for i in range(epochs):
     print("-"*20, "EPOCH:", i, "-"*20, file=file)
     print("Training...", end='', file=file)
@@ -136,14 +142,16 @@ for i in range(epochs):
             ### 构造带有扰动的输入
             inputs["inputs_embeds"] = delta + word_embedding.detach()
             ### 前向传播
-            loss_adv = ls(model(**inputs).logits, model(**batch).logits)
+            output_normal = model(**batch)
+            output_adv = model(**inputs)
+            loss_adv = ls(output_normal.logits, output_adv.logits)
             ### 反向传播
             loss_adv.backward()
             ### SGLD采样
             delta.data = SGLD(delta.data, - delta.grad, sampling_step_delta, sampling_noise_delta)
             delta.grad.zero_()
             ### 更新扰动的分布均值
-            mean_delta.data = beta * mean_delta.data + (1 - beta) * delta.data
+            mean_delta.data = beta_s * mean_delta.data + (1 - beta_s) * delta.data
 
         ## 2.2 sampling model parameters (theta)
         for k in range(sampling_times_theta):
@@ -158,20 +166,26 @@ for i in range(epochs):
                 word_embedding = model.roberta.embeddings.word_embeddings(batch["input_ids"])
             inputs["inputs_embeds"] = mean_delta.detach() + word_embedding
             ### 前向传播
-            loss_sum = model(**batch).loss + lambda_s * ls(model(**inputs).logits, model(**batch).logits)
+            output_normal = model(**batch)
+            output_adv = model(**inputs)
+            loss_sum = output_normal.loss + lambda_s * ls(output_normal.logits, output_adv.logits)
             ### 反向传播
             loss_sum.backward()
             ### SGLD采样并更新分布均值
             for name, p in model.named_parameters():
                 p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta) # 将模型参数更新为新的采样
-                mean_theta[name] = beta * mean_theta[name] + (1 - beta) * p.data # 更新模型参数的分布均值 
+                mean_theta[name] = beta_s * mean_theta[name] + (1 - beta_s) * p.data # 更新模型参数的分布均值 
                           
         # 3.update model parameters
         for key in back_parameters:
-            back_parameters[key] = beta * back_parameters[key] + (1 - beta) * mean_theta[key] # 调整备份的模型参数
+            if key == "classifier.weight" or key == "classifier.bias":
+                back_parameters[key] = mean_theta[key]
+            else:
+                back_parameters[key] = beta_p * back_parameters[key] + (1 - beta_p) * mean_theta[key] # 调整备份的模型参数
         model.load_state_dict(back_parameters) # 将模型参数更新为这次迭代的模型参数
         # [end] MAT Training
         progress_bar.update(1)
+        ite +=1
 
     print("\rEvaling...", end='', file=file)
     model.eval()
@@ -192,7 +206,7 @@ for m in eval_metric_list:
     score_list.append(list(m.values())[0])
 print("*"*19, "Best Score", "*"*19, file=file)
 print("EPOCH:", score_list.index(max(score_list)), file=file)
-print("Metric:", eval_metric_list[score_list.index(max(score_list))], file=file)
+print("Best Metric:", eval_metric_list[score_list.index(max(score_list))], file=file)
 print("*"*50, file=file)
 
 file.close()
