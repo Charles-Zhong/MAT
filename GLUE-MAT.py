@@ -17,15 +17,15 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=5, help="Total number of training epochs to perform.")
     parser.add_argument("--adv_init_epsilon", type=float, default=1e-2, help="Initialization size of adversarial perturbation.")
     parser.add_argument("--adv_init_type", type=str, default="zero", help="Initialization type of adversarial perturbation.")
-    parser.add_argument("--sampling_times_theta", type=int, default=20, help="Stochastic gradient langevin dynamics sampling times for model parameters.")
-    parser.add_argument("--sampling_times_delta", type=int, default=3, help="Stochastic gradient langevin dynamics sampling times for adversarial perturbation.")
+    parser.add_argument("--sampling_times_theta", type=int, default=30, help="Stochastic gradient langevin dynamics sampling times for model parameters.")
+    parser.add_argument("--sampling_times_delta", type=int, default=5, help="Stochastic gradient langevin dynamics sampling times for adversarial perturbation.")
     parser.add_argument("--sampling_noise_theta", type=float, default=0, help="Stochastic gradient langevin dynamics sampling noise for model parameters.")
     parser.add_argument("--sampling_noise_delta", type=float, default=0, help="Stochastic gradient langevin dynamics sampling noise for adversarial perturbation.")
-    parser.add_argument("--sampling_step_theta", type=float, default=3e-5, help="Stochastic gradient langevin dynamics sampling step for model parameters.")
+    parser.add_argument("--sampling_step_theta", type=float, default=1e-2, help="Stochastic gradient langevin dynamics sampling step for model parameters.")
     parser.add_argument("--sampling_step_delta", type=float, default=1e-3, help="Stochastic gradient langevin dynamics sampling step for adversarial perturbation.")
-    parser.add_argument("--lambda_s", type=float, default=1, help="Tuning parameter lambda of the objective function.")
+    parser.add_argument("--lambda_s", type=float, default=0.1, help="Tuning parameter lambda of the objective function.")
     parser.add_argument("--beta_s", type=float, default=0.1, help="Exponential damping beta for stability in stochastic gradient langevin dynamics sampling.")
-    parser.add_argument("--beta_p", type=float, default=0.9, help="Exponential damping beta for stability in parameters updating.")
+    parser.add_argument("--beta_p", type=float, default=0.3, help="Exponential damping beta for stability in parameters updating.")
     args = parser.parse_args()
     return args
 
@@ -68,14 +68,13 @@ def ls(P, Q):
 
 def SGLD(z, grad, step, epsilon):
     noise = perturbation.init_delta(z.size(), epsilon=epsilon, init_type="randn")
-    #z = z - step * (iterations-ite)/iterations * grad + math.sqrt(2 * step) * noise
     z = z - step * grad + math.sqrt(2 * step) * noise
     return z
 
 # all is ready!
 
 train_start = time.time()
-file = open("log/run: "+ str(int(train_start)) +".log","w") # 设置日志文件
+file = open("log/run_"+ str(int(train_start)) +".log","w") # 设置日志文件
 
 # Training
 print(time.ctime(), file=file)
@@ -173,15 +172,12 @@ for i in range(epochs):
             loss_sum.backward()
             ### SGLD采样并更新分布均值
             for name, p in model.named_parameters():
-                p.data = SGLD(p.data, p.grad, sampling_step_theta, sampling_noise_theta) # 将模型参数更新为新的采样
+                p.data = SGLD(p.data, p.grad, sampling_step_theta * (iterations-ite)/iterations, sampling_noise_theta) # 将模型参数更新为新的采样
                 mean_theta[name] = beta_s * mean_theta[name] + (1 - beta_s) * p.data # 更新模型参数的分布均值 
                           
         # 3.update model parameters
         for key in back_parameters:
-            if key == "classifier.weight" or key == "classifier.bias":
-                back_parameters[key] = mean_theta[key]
-            else:
-                back_parameters[key] = beta_p * back_parameters[key] + (1 - beta_p) * mean_theta[key] # 调整备份的模型参数
+            back_parameters[key] = beta_p * back_parameters[key] + (1 - beta_p) * mean_theta[key] # 调整备份的模型参数
         model.load_state_dict(back_parameters) # 将模型参数更新为这次迭代的模型参数
         # [end] MAT Training
         progress_bar.update(1)
