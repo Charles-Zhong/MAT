@@ -20,6 +20,17 @@ TASKS_TO_KEYS = {
     "WNLI": ("sentence1", "sentence2")
 }
 
+TASKS_TO_LABEL = {
+    "CoLA": ("unacceptable", "acceptable"),
+    "SST-2": ("negative", "positive"),
+    "MRPC": ("not_equivalent", "equivalent"),
+    "QQP": ("not_duplicate", "duplicate"),
+    "MNLI-m": ("entailment", "neutral", "contradiction"),
+    "MNLI-mm": ("entailment", "neutral", "contradiction"),
+    "QNLI": ("entailment", "not_entailment"),
+    "RTE": ("entailment", "not_entailment"),
+    "WNLI": ("entailment", "not_entailment")
+}
 
 def LoadDataset(task_name):
     # 加载数据集

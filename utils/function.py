@@ -1,3 +1,4 @@
+import math
 import torch
 
 def init_delta(size, epsilon=1e-1, init_type="zero"):
@@ -23,3 +24,17 @@ def update_delta(delta, Adv_epsilon, Adv_max_norm):
             reweights = (Adv_max_norm / delta_norm * exceed_mask + (1-exceed_mask)).view(-1, 1, 1) # 缩减比例
             new_delta = (new_delta * reweights)  # 按比例缩减到norm-ball内
     return new_delta
+
+def ls(P, Q, task_name):
+    task_type = "classification" if task_name != "STS-B" else "regression"
+    if(task_type == "classification"):
+        ls_fn = torch.nn.KLDivLoss(reduction='batchmean')
+        return ls_fn(P.softmax(dim=-1).log(), Q.softmax(dim=-1)) + ls_fn(Q.softmax(dim=-1).log(), P.softmax(dim=-1))
+    elif(task_type == "regression"):
+        ls_fn = torch.nn.MSELoss(reduction="sum")
+        return ls_fn(P, Q)
+
+def SGLD(z, grad, step, epsilon):
+    noise = init_delta(z.size(), epsilon=epsilon, init_type="randn")
+    z = z - step * grad + math.sqrt(2 * step) * noise
+    return z
