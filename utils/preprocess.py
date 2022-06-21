@@ -1,6 +1,6 @@
 from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, set_seed
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding
 
 # 设置任务数据集的映射关系
 GLUE_TASKS = ["CoLA", "SST-2", "MRPC", "STS-B", "QQP",
@@ -21,15 +21,15 @@ TASKS_TO_KEYS = {
 }
 
 TASKS_TO_LABEL = {
-    "CoLA": ("unacceptable", "acceptable"),
-    "SST-2": ("negative", "positive"),
-    "MRPC": ("not_equivalent", "equivalent"),
-    "QQP": ("not_duplicate", "duplicate"),
+    "CoLA": ("0", "1"),
+    "SST-2": ("0", "1"),
+    "MRPC": ("0", "1"),
+    "QQP": ("0", "1"),
     "MNLI-m": ("entailment", "neutral", "contradiction"),
     "MNLI-mm": ("entailment", "neutral", "contradiction"),
     "QNLI": ("entailment", "not_entailment"),
     "RTE": ("entailment", "not_entailment"),
-    "WNLI": ("entailment", "not_entailment")
+    "WNLI": ("0", "1")
 }
 
 def LoadDataset(task_name):
@@ -103,8 +103,7 @@ def MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size):
     return (train_dataloader, eval_dataloader, test_dataloader)
 
 
-def preprocess(task_name, model_name, batch_size, seed):
-    set_seed(seed)
+def preprocess(task_name, model_name, batch_size):
     raw_dataset, metric = LoadDataset(task_name)
     tokenizer, model = LoadModel(task_name, model_name)
     tokenized_dataset = Tokenize(task_name, tokenizer, raw_dataset)

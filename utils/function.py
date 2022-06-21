@@ -34,7 +34,7 @@ def ls(P, Q, task_name):
         ls_fn = torch.nn.MSELoss(reduction="sum")
         return ls_fn(P, Q)
 
-def SGLD(z, grad, step, epsilon):
-    noise = init_delta(z.size(), epsilon=epsilon, init_type="randn")
-    z = z - step * grad + math.sqrt(2 * step) * noise
-    return z
+def SGLD(x, grad, step, epsilon):
+    noise = init_delta(x.size(), epsilon=epsilon, init_type="randn")
+    x = x - step * grad + math.sqrt(2 * step) * noise
+    return x
