@@ -19,7 +19,6 @@ TASKS_TO_KEYS = {
     "RTE": ("sentence1", "sentence2"),
     "WNLI": ("sentence1", "sentence2")
 }
-
 TASKS_TO_LABEL = {
     "CoLA": ("0", "1"),
     "SST-2": ("0", "1"),
@@ -43,7 +42,6 @@ def LoadDataset(task_name):
     print("-" * 50)
     return raw_dataset, metric
 
-
 def LoadModel(task_name, model_name):
     # 加载tokenizer和model
     print("-" * 8, "load the tokenizer and the model", "-" * 8)
@@ -61,7 +59,6 @@ def LoadModel(task_name, model_name):
     print("-" * 50)
     return tokenizer, model
 
-
 def Tokenize(task_name, tokenizer, raw_dataset):
     print("-" * 14, "tokenize the dataset", "-" * 14)
     print("[Notice]: tokenizing the dataset...")
@@ -77,7 +74,6 @@ def Tokenize(task_name, tokenizer, raw_dataset):
     print("[Notice]: the dataset is tokenized.")
     print("-" * 50)
     return tokenized_dataset
-
 
 def MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size):
     # 设置训练集、验证集、测试集
@@ -101,7 +97,6 @@ def MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size):
     print("[Notice]: the dataloader is made.")
     print("-" * 50)
     return (train_dataloader, eval_dataloader, test_dataloader)
-
 
 def preprocess(task_name, model_name, batch_size):
     raw_dataset, metric = LoadDataset(task_name)

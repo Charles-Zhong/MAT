@@ -1,8 +1,7 @@
 import argparse
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Finetune a transformers model on GLUE with MAT training mode.")
+    parser = argparse.ArgumentParser(description="Finetune a transformers model on GLUE with MAT training mode.")
     parser.add_argument("--task_name", type=str, default="SST-2", 
                         choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI"], 
                         help="The name of the glue task to train on.")
