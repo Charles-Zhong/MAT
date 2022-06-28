@@ -1,0 +1,70 @@
+{
+    "task_name": {
+        "_type": "choice",
+        "_value": ["CoLA"]
+    },
+    "model_name": {
+        "_type": "choice",
+        "_value": ["bert-base-uncased"]
+    },
+    "seed": {
+        "_type": "randint",
+        "_value": [0, 10000]
+    },
+    "batch_size": {
+        "_type": "choice",
+        "_value": [64]
+    },
+    "epochs": {
+        "_type": "choice",
+        "_value": [10]
+    },
+    "adv_init_epsilon": {
+        "_type": "quniform",
+        "_value": [0, 0.01, 0.0001]
+    },
+    "adv_init_type": {
+        "_type": "choice",
+        "_value": ["zero","rand","randn"]
+    },
+    "sampling_times_theta": {
+        "_type": "choice",
+        "_value": [10, 20, 30]
+    },
+    "sampling_times_delta": {
+        "_type": "choice",
+        "_value": [3, 5]
+    },
+    "sampling_noise_theta": {
+        "_type": "quniform",
+        "_value": [0, 0.01, 0.00001]
+    },
+    "sampling_noise_delta": {
+        "_type": "quniform",
+        "_value": [0, 0.01, 0.00001]
+    },
+    "sampling_step_theta": {
+        "_type": "quniform",
+        "_value": [0, 0.01, 0.0001]
+    },
+    "sampling_step_delta": {
+        "_type": "quniform",
+        "_value": [0, 0.01, 0.0001]
+    },
+    "lambda_s": {
+        "_type": "choice",
+        "_value": [0.1, 0.3, 0.5, 1, 3]
+    },
+    "beta_s": {
+        "_type": "choice",
+        "_value": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    },
+    "beta_p": {
+        "_type": "choice",
+        "_value": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    },
+    "save_model": {
+        "_type": "choice",
+        "_value": ["False"]
+    }
+}

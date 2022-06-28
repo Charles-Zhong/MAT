@@ -1,0 +1,16 @@
+experiment_name: GLUE-MAT
+search_space_file: search_space.json
+
+trial_command: python GLUE-MAT-NNI.py
+trial_code_directory: ..
+
+trial_concurrency: 1
+max_trial_number: 100
+
+tuner:
+  name: TPE
+  class_args:
+    optimize_mode: maximize
+
+training_service:
+  platform: local

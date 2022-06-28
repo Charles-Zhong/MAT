@@ -12,7 +12,7 @@ def parse_args():
                         help="A seed for reproducible training.")
     parser.add_argument("--batch_size", type=int, default=64,
                         help="Batch size for the training dataloader.")
-    parser.add_argument("--epochs", type=int, default=5,
+    parser.add_argument("--epochs", type=int, default=10,
                         help="Total number of training epochs to perform.")
     parser.add_argument("--adv_init_epsilon", type=float, default=0.001,
                         help="Initialization size of adversarial perturbation.")
