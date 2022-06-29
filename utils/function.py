@@ -35,5 +35,7 @@ def ls(P, Q, task_name):
 
 def SGLD(x, grad, step, epsilon):
     noise = init_delta(x.size(), epsilon=epsilon, init_type="randn")
+    # inner_mask = (torch.mul(-grad, noise).sum(axis=-1) > 0).to(noise).unsqueeze(-1).expand_as(noise)
+    # x = x - step * grad + math.sqrt(2 * step) * noise * inner_mask
     x = x - step * grad + math.sqrt(2 * step) * noise
     return x

@@ -29,7 +29,7 @@
     },
     "sampling_times_theta": {
         "_type": "choice",
-        "_value": [10, 20, 30]
+        "_value": [20, 30]
     },
     "sampling_times_delta": {
         "_type": "choice",
@@ -37,11 +37,11 @@
     },
     "sampling_noise_theta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.00001]
+        "_value": [0, 0.0001, 0.000001]
     },
     "sampling_noise_delta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.00001]
+        "_value": [0, 0.0001, 0.000001]
     },
     "sampling_step_theta": {
         "_type": "quniform",
@@ -53,7 +53,7 @@
     },
     "lambda_s": {
         "_type": "choice",
-        "_value": [0.1, 0.3, 0.5, 1, 3]
+        "_value": [0.1, 0.5, 1]
     },
     "beta_s": {
         "_type": "choice",

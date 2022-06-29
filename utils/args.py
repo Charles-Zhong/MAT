@@ -2,7 +2,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on GLUE with MAT training mode.")
-    parser.add_argument("--task_name", type=str, default="SST-2", 
+    parser.add_argument("--task_name", type=str, default="CoLA", 
                         choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI"], 
                         help="The name of the glue task to train on.")
     parser.add_argument("--model_name", type=str, default="bert-base-uncased", 
@@ -23,14 +23,14 @@ def parse_args():
                         help="Stochastic gradient langevin dynamics sampling times for model parameters.")
     parser.add_argument("--sampling_times_delta", type=int, default=5,
                         help="Stochastic gradient langevin dynamics sampling times for adversarial perturbation.")
-    parser.add_argument("--sampling_noise_theta", type=float, default=1e-5,
-                        help="Stochastic gradient langevin dynamics sampling noise for model parameters.")
-    parser.add_argument("--sampling_noise_delta", type=float, default=1e-5,
-                        help="Stochastic gradient langevin dynamics sampling noise for adversarial perturbation.")
     parser.add_argument("--sampling_step_theta", type=float, default=0.001,
                         help="Stochastic gradient langevin dynamics sampling step for model parameters.")
     parser.add_argument("--sampling_step_delta", type=float, default=0.001,
                         help="Stochastic gradient langevin dynamics sampling step for adversarial perturbation.")
+    parser.add_argument("--sampling_noise_theta", type=float, default=1e-5,
+                        help="Stochastic gradient langevin dynamics sampling noise for model parameters.")
+    parser.add_argument("--sampling_noise_delta", type=float, default=1e-5,
+                        help="Stochastic gradient langevin dynamics sampling noise for adversarial perturbation.")
     parser.add_argument("--lambda_s", type=float, default=1,
                         help="Tuning parameter lambda of the objective function.")
     parser.add_argument("--beta_s", type=float, default=0.5,
