@@ -1,7 +1,7 @@
 {
     "task_name": {
         "_type": "choice",
-        "_value": ["CoLA"]
+        "_value": ["MRPC"]
     },
     "model_name": {
         "_type": "choice",
@@ -35,14 +35,6 @@
         "_type": "choice",
         "_value": [3, 5]
     },
-    "sampling_noise_theta": {
-        "_type": "quniform",
-        "_value": [0, 0.0001, 0.000001]
-    },
-    "sampling_noise_delta": {
-        "_type": "quniform",
-        "_value": [0, 0.0001, 0.000001]
-    },
     "sampling_step_theta": {
         "_type": "quniform",
         "_value": [0, 0.01, 0.0001]
@@ -50,6 +42,14 @@
     "sampling_step_delta": {
         "_type": "quniform",
         "_value": [0, 0.01, 0.0001]
+    },
+    "sampling_noise_theta": {
+        "_type": "quniform",
+        "_value": [0, 0.0001, 0.000001]
+    },
+    "sampling_noise_delta": {
+        "_type": "quniform",
+        "_value": [0, 0.0001, 0.000001]
     },
     "lambda_s": {
         "_type": "choice",

@@ -36,6 +36,7 @@ print("TASK:", args.task_name, file=file)
 print("MODEL:", args.model_name, file=file)
 print("DEVICE:", device, file=file)
 print("="*16, "General Training", "="*16, file=file)  # 常规训练参数
+print("SEED:", args.seed, file=file)
 print("EPOCH_NUM:", args.epochs, file=file)
 print("BATCH_SIZE:", args.batch_size, file=file)
 print("="*18, "MAT Training", "="*18, file=file)  # MAT训练参数
@@ -58,6 +59,7 @@ for epoch in range(args.epochs):
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args.epochs)+"]")
     ###################  Train-begin  ###################
     model.train()
+    train_loss = 0
     print("-"*20, "EPOCH:", epoch+1, "-"*20, file=file)
     for batch in train_dataloader:
         batch = {key: batch[key].to(device) for key in batch}
@@ -115,6 +117,7 @@ for epoch in range(args.epochs):
             output_normal_logits = output_normal.logits.detach()
             output_adv = model(**inputs)
             loss_sum = output_normal.loss + args.lambda_s * function.ls(output_normal_logits, output_adv.logits, args.task_name)
+            train_loss += loss_sum.item() / args.sampling_times_theta
             # 反向传播
             loss_sum.backward()
             # SGLD采样并更新分布均值
@@ -133,16 +136,20 @@ for epoch in range(args.epochs):
 
     ###################  Validate-begin  ###################
     model.eval()
+    eval_loss = 0
     for batch in eval_dataloader:
         batch = {key: batch[key].to(device) for key in batch}
         with torch.no_grad():
             outputs = model(**batch)
+        eval_loss += outputs.loss.item()
         predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
         metric.add_batch(predictions=predictions, references=batch["labels"])
     metric_data = metric.compute()
     eval_metric_list.append(metric_data)
     score = list(metric_data.values())[0]
     eval_score_list.append(score)
+    loss_dic = {"train_loss": train_loss, "eval_loss": eval_loss}
+    print("\r Loss:", loss_dic, file=file)
     print("\rMetric:", metric_data, file=file)
     print("-"*50, file=file)
     ###################  Validate-end  ###################
