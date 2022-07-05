@@ -8,8 +8,8 @@
         "_value": ["bert-base-uncased"]
     },
     "seed": {
-        "_type": "randint",
-        "_value": [0, 10000]
+        "_type": "choice",
+        "_value": [42]
     },
     "batch_size": {
         "_type": "choice",
@@ -29,7 +29,7 @@
     },
     "sampling_times_theta": {
         "_type": "choice",
-        "_value": [20, 30]
+        "_value": [30]
     },
     "sampling_times_delta": {
         "_type": "choice",
@@ -37,7 +37,7 @@
     },
     "sampling_step_theta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.0001]
+        "_value": [0, 0.01, 0.001]
     },
     "sampling_step_delta": {
         "_type": "quniform",
@@ -45,11 +45,11 @@
     },
     "sampling_noise_theta": {
         "_type": "quniform",
-        "_value": [0, 0.0001, 0.000001]
+        "_value": [0, 0.0001, 0.00001]
     },
     "sampling_noise_delta": {
         "_type": "quniform",
-        "_value": [0, 0.0001, 0.000001]
+        "_value": [0, 0.0001, 0.00001]
     },
     "lambda_s": {
         "_type": "choice",
