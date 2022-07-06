@@ -5,6 +5,7 @@ import torch
 import transformers
 from tqdm.auto import tqdm
 from utils import args, preprocess, function
+from torch.utils.tensorboard import SummaryWriter
 
 args = args.parse_args()
 transformers.set_seed(args.seed)
@@ -14,9 +15,10 @@ run_time = str(int(time.time()))
 log_path = "logs/" + args.task_name + "/" + args.model_name + "/" + run_time
 os.makedirs(log_path)
 file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
+writer = SummaryWriter(log_dir=log_path)
 
 # 加载模型训练集
-local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
+local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model。
 model, dataloader, metric = preprocess.preprocess(args.task_name, local_model_path + args.model_name, args.batch_size)
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
@@ -24,6 +26,8 @@ model.to(device)
 # 设置进度条
 iterations = args.epochs * len(train_dataloader)
 progress_bar = tqdm(range(iterations))
+
+eval_step = len(train_dataloader) // 10 # 1个Epoch评估10次
 
 eval_metric_list = []  # 验证集metric列表
 eval_score_list = []  # 验证集score列表
@@ -57,10 +61,9 @@ for epoch in range(args.epochs):
 
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args.epochs)+"]")
     ###################  Train-begin  ###################
-    model.train()
-    train_loss = 0
     print("-"*20, "EPOCH:", epoch+1, "-"*20, file=file)
     for batch in train_dataloader:
+        model.train()
         batch = {key: batch[key].to(device) for key in batch}
 
         # [begin] MAT Training
@@ -98,7 +101,10 @@ for epoch in range(args.epochs):
             delta = function.SGLD(delta.detach(), - delta.grad, args.sampling_step_delta, args.sampling_noise_delta).detach()
             # 更新扰动的分布均值
             mean_delta = args.beta_s * mean_delta + (1 - args.beta_s) * delta
-
+        
+        avg_loss_normal = 0.0
+        avg_loss_adv = 0.0
+        avg_loss_total = 0.0
         # 2.2 sampling model parameters (theta)
         for k in range(args.sampling_times_theta):
             # 清空模型参数的梯度
@@ -115,69 +121,77 @@ for epoch in range(args.epochs):
             output_normal = model(**batch)  # model参数每次都会改变，因此需要重新计算正常输出
             output_normal_logits = output_normal.logits.detach()
             output_adv = model(**inputs)
-            loss_sum = output_normal.loss + args.lambda_s * function.ls(output_normal_logits, output_adv.logits, args.task_name)
-            train_loss += loss_sum.item() / args.sampling_times_theta
+            loss_adv = function.ls(output_normal_logits, output_adv.logits, args.task_name)
+            loss_sum = output_normal.loss + args.lambda_s * loss_adv
+            avg_loss_normal += output_normal.loss.item()
+            avg_loss_adv += loss_adv.item()
+            avg_loss_total += loss_sum.item()
             # 反向传播
             loss_sum.backward()
             # SGLD采样并更新分布均值
             for name, p in model.named_parameters():
                 p.data = function.SGLD(p.data, p.grad, args.sampling_step_theta * (iterations-current_iteration)/iterations, args.sampling_noise_theta)  # 将模型参数更新为新的采样
+                # p.data = function.SGLD(p.data, p.grad, lr_theta, args.sampling_noise_theta)  # 将模型参数更新为新的采样
                 mean_theta[name] = args.beta_s * mean_theta[name] + (1 - args.beta_s) * p.data  # 更新模型参数的分布均值
-
+        
+        avg_loss_normal /= float(args.sampling_times_theta)
+        avg_loss_adv /= float(args.sampling_times_theta)
+        avg_loss_total /= float(args.sampling_times_theta)
+        writer.add_scalar("Loss/normal", avg_loss_normal, current_iteration)
+        writer.add_scalar("Loss/adv", avg_loss_adv, current_iteration)
+        writer.add_scalar("Loss/total", avg_loss_total, current_iteration)
         # 3.update model parameters
         for key in back_parameters:
             back_parameters[key] = args.beta_p * back_parameters[key] + (1 - args.beta_p) * mean_theta[key]  # 调整备份的模型参数
         model.load_state_dict(back_parameters)  # 将模型参数更新为这次迭代的模型参数
         # [end] MAT Training
-        current_iteration = current_iteration + 1
-        progress_bar.update(1)
     ###################  Train-end  ###################
 
     ###################  Validate-begin  ###################
-    model.eval()
-    eval_loss = 0
-    for batch in eval_dataloader:
-        batch = {key: batch[key].to(device) for key in batch}
-        with torch.no_grad():
-            outputs = model(**batch)
-        eval_loss += outputs.loss.item()
-        predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
-        metric.add_batch(predictions=predictions, references=batch["labels"])
-    metric_data = metric.compute()
-    eval_metric_list.append(metric_data)
-    score = list(metric_data.values())[0]
-    eval_score_list.append(score)
-    loss_dic = {"train_loss": train_loss, "eval_loss": eval_loss}
-    print("Loss:", loss_dic, file=file)
-    print("Metric:", metric_data, file=file)
-    print("-"*50, file=file)
-    ###################  Validate-end  ###################
-
-    ###################  Test-begin  ###################
-    model.eval()
-    if score == max(eval_score_list):
-        with(open(log_path + "/" + args.task_name+".tsv", "w")) as f:
-            tsv_writer = csv.writer(f, delimiter='\t')
-            tsv_writer.writerow(["index", "prediction"])
-            for t, batch in enumerate(test_dataloader):
+        if current_iteration % eval_step == 0:
+            model.eval()
+            for batch in eval_dataloader:
                 batch = {key: batch[key].to(device) for key in batch}
-                batch['labels'] = None # model的outputs默认会利用batch中的labels计算loss，测试集label默认为-1，会导致报错，labels设为None可规避该问题
                 with torch.no_grad():
                     outputs = model(**batch)
                 predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
-                for id, pre in enumerate(predictions):
-                    predict_label = preprocess.TASKS_TO_LABEL[args.task_name][pre.item()] if args.task_name != "STS-B" else round(pre.item(), 3)  # 保留3位小数
-                    tsv_writer.writerow([id + t * args.batch_size, predict_label])
-            f.close()
-        if args.save_model == True:
-            torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
+                metric.add_batch(predictions=predictions, references=batch["labels"])
+            writer.add_scalar("Loss/eval", outputs.loss, current_iteration)
+            metric_data = metric.compute()
+            eval_metric_list.append(metric_data)
+            score = list(metric_data.values())[0]
+            eval_score_list.append(score)
+            print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
+            print("-"*50, file=file)
+    ###################  Train-end  ###################
+
+    ###################  Test-begin  ###################
+            if score == max(eval_score_list):
+                with(open(log_path + "/" + args.task_name+".tsv", "w")) as f_tsv:
+                    tsv_writer = csv.writer(f_tsv, delimiter='\t')
+                    tsv_writer.writerow(["index", "prediction"])
+                    for t, batch in enumerate(test_dataloader):
+                        batch = {key: batch[key].to(device) for key in batch}
+                        batch['labels'] = None # model的outputs默认会利用batch中的labels计算loss，测试集label默认为-1，会导致报错，labels设为None可规避该问题
+                        with torch.no_grad():
+                            outputs = model(**batch)
+                        predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
+                        for id, pre in enumerate(predictions):
+                            predict_label = preprocess.TASKS_TO_LABEL[args.task_name][pre.item()] if args.task_name != "STS-B" else round(pre.item(), 3)  # 保留3位小数
+                            tsv_writer.writerow([id + t * args.batch_size, predict_label])
+                    f_tsv.close()
+                if args.save_model == True:
+                    torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
     ###################  Test-end  ###################
-    file.flush()
+        writer.flush()
+        file.flush()
+        current_iteration = current_iteration + 1
+        progress_bar.update(1)
 
 # Best score in validation set
 print("*"*19, "Best Score", "*"*19, file=file)
-print("EPOCH:", eval_score_list.index(max(eval_score_list))+1, file=file)
 print("Best Metric:", eval_metric_list[eval_score_list.index(max(eval_score_list))], file=file)
 print("*"*50, file=file)
 
+writer.close()
 file.close()

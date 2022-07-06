@@ -17,7 +17,7 @@ os.makedirs(log_path)
 file = open(log_path + "/" + args["task_name"] + "_" + args["model_name"] + "_" + run_time + ".log", "w")  # 设置日志文件
 
 # 加载模型训练集
-local_model_path = "models/"  # "models/" 为预先下载到本地的模型文件夹, 设置为""时会自动从huggingface下载模型。
+local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
 model, dataloader, metric = preprocess.preprocess(args["task_name"], local_model_path + args["model_name"], args["batch_size"])
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
@@ -35,7 +35,6 @@ print(time.ctime(), file=file)
 print("*"*20, "Training", "*"*20, file=file)  # 训练任务
 print("TASK:", args["task_name"], file=file)
 print("MODEL:", args["model_name"], file=file)
-print("DEVICE:", device, file=file)
 print("="*16, "General Training", "="*16, file=file)  # 常规训练参数
 print("SEED:", args["seed"], file=file)
 print("EPOCH_NUM:", args["epochs"], file=file)
@@ -172,7 +171,7 @@ for epoch in range(args["epochs"]):
                     tsv_writer.writerow([id + t * args["batch_size"], predict_label])
             f.close()
         if args["save_model"] == "True":
-            torch.save(model, log_path + "/" + run_time + ".pth")
+            torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
     ###################  Test-end  ###################
     file.flush()
 
