@@ -11,9 +11,9 @@ transformers.set_seed(args.seed)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 run_time = str(int(time.time()))
-log_path = "logs/" + args["task_name"] + "/" + args["model_name"] + "/" + run_time
+log_path = "logs/" + args.task_name + "/" + args.model_name + "/" + run_time
 os.makedirs(log_path)
-file = open(log_path + "/" + args["task_name"] + "_" + args["model_name"] + "_" + run_time + ".log", "w")  # 设置日志文件
+file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
 
 # 加载模型训练集
 local_model_path = "models/"  # "models/" 为预先下载到本地的模型文件夹, 设置为""时会自动从huggingface下载模型。
@@ -53,7 +53,7 @@ print("Lambda:", args.lambda_s, file=file)
 print("Beta_s:", args.beta_s, file=file)
 print("Beta_p:", args.beta_p, file=file)
 print("*"*50, file=file)
-
+file.flush()
 for epoch in range(args.epochs):
 
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args.epochs)+"]")
@@ -149,8 +149,8 @@ for epoch in range(args.epochs):
     score = list(metric_data.values())[0]
     eval_score_list.append(score)
     loss_dic = {"train_loss": train_loss, "eval_loss": eval_loss}
-    print("\r Loss:", loss_dic, file=file)
-    print("\rMetric:", metric_data, file=file)
+    print("Loss:", loss_dic, file=file)
+    print("Metric:", metric_data, file=file)
     print("-"*50, file=file)
     ###################  Validate-end  ###################
 

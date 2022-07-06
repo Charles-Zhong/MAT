@@ -54,7 +54,7 @@ print("Lambda:", args["lambda_s"], file=file)
 print("Beta_s:", args["beta_s"], file=file)
 print("Beta_p:", args["beta_p"], file=file)
 print("*"*50, file=file)
-
+file.flush()
 for epoch in range(args["epochs"]):
 
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args["epochs"])+"]")
@@ -151,7 +151,7 @@ for epoch in range(args["epochs"]):
     eval_score_list.append(score)
     report_dic = {"default": score, "train_loss": train_loss, "eval_loss": eval_loss}
     nni.report_intermediate_result(report_dic)
-    print("\rMetric:", metric_data, file=file)
+    print("Metric:", metric_data, file=file)
     print("-"*50, file=file)
     ###################  Validate-end  ###################
 
