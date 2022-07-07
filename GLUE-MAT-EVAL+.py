@@ -183,8 +183,8 @@ for epoch in range(args.epochs):
                 if args.save_model == True:
                     torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
     ###################  Test-end  ###################
-        writer.flush()
-        file.flush()
+            writer.flush()
+            file.flush()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
 
