@@ -130,6 +130,7 @@ for epoch in range(args["epochs"]):
             back_parameters[key] = args["beta_p"] * back_parameters[key] + (1 - args["beta_p"]) * mean_theta[key]  # 调整备份的模型参数
         model.load_state_dict(back_parameters)  # 将模型参数更新为这次迭代的模型参数
         # [end] MAT Training
+        torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
     ###################  Train-end  ###################

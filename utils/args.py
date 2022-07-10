@@ -14,11 +14,11 @@ def parse_args():
                         help="Batch size for the training dataloader.")
     parser.add_argument("--epochs", type=int, default=10,
                         help="Total number of training epochs to perform.")
-    parser.add_argument("--adv_init_epsilon", type=float, default=0.001,
-                        help="Initialization size of adversarial perturbation.")
     parser.add_argument("--adv_init_type", type=str, default="randn", 
                         choices=["zero", "rand", "randn"],
                         help="Initialization type of adversarial perturbation.")
+    parser.add_argument("--adv_init_epsilon", type=float, default=0.001,
+                        help="Initialization size of adversarial perturbation.")
     parser.add_argument("--sampling_times_theta", type=int, default=30,
                         help="Stochastic gradient langevin dynamics sampling times for model parameters.")
     parser.add_argument("--sampling_times_delta", type=int, default=5,
