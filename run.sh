@@ -7,7 +7,7 @@
 #                    [--sampling_noise_theta SAMPLING_NOISE_THETA] [--sampling_noise_delta SAMPLING_NOISE_DELTA]
 #                    [--lambda_s LAMBDA_S] [--beta_s BETA_S] [--beta_p BETA_P] [--save_model SAVE_MODEL]
 #!/bin/bash
-PY_FILE=GLUE-MAT.py
+PY_FILE=GLUE_MAT.py
 
 TASK_NAME=CoLA
 MODEL_NAME=roberta-large
