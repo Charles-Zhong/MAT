@@ -172,7 +172,7 @@ for epoch in range(args["epochs"]):
                     tsv_writer.writerow([id + t * args["batch_size"], predict_label])
             f.close()
         if args["save_model"] == "True":
-            torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
+            torch.save(model, log_path + "/" + args["task_name"] + "_best_model.pth")
     ###################  Test-end  ###################
     file.flush()
 
