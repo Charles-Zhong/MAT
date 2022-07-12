@@ -184,7 +184,7 @@ for epoch in range(args.epochs):
     ###################  Test-end  ###################
             writer.flush()
             file.flush()
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
 

@@ -174,7 +174,7 @@ for epoch in range(args["epochs"]):
                     torch.save(model, log_path + "/" + args["task_name"] + "_best_model.pth")
     ###################  Test-end  ###################
             file.flush()
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
 
