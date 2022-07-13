@@ -60,7 +60,6 @@ for epoch in range(args["epochs"]):
 
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args["epochs"])+"]")
     ###################  Train-begin  ###################
-    train_loss = 0
     print("-"*20, "EPOCH:", epoch+1, "-"*20, file=file)
     for batch in train_dataloader:
         model.train()
@@ -137,24 +136,25 @@ for epoch in range(args["epochs"]):
     ###################  Validate-begin  ###################
         if current_iteration % eval_step == 0:
             model.eval()
-            eval_loss = 0
             for batch in eval_dataloader:
                 batch = {key: batch[key].to(device) for key in batch}
                 with torch.no_grad():
                     outputs = model(**batch)
-                eval_loss += outputs.loss.item()
                 predictions = outputs.logits.argmax(dim=-1) if args["task_name"] != "STS-B" else outputs.logits.squeeze()
                 metric.add_batch(predictions=predictions, references=batch["labels"])
             metric_data = metric.compute()
             eval_metric_list.append(metric_data)
             score = list(metric_data.values())[0]
             eval_score_list.append(score)
-            report_dic = {"default": score, "train_loss": train_loss, "eval_loss": eval_loss}
-            nni.report_intermediate_result(report_dic)
+            nni.report_intermediate_result(score)
             print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
             print("-"*50, file=file)
     ###################  Train-end  ###################
-
+            if score == 0 and current_iteration!=0 and max(eval_score_list)==0:
+                nni.report_final_result(max(eval_score_list))
+                file.close()
+                import sys
+                sys.exit(0)
     ###################  Test-begin  ###################
             if score == max(eval_score_list):
                 with(open(log_path + "/" + args["task_name"]+".tsv", "w")) as f_tsv:

@@ -13,11 +13,11 @@
     },
     "batch_size": {
         "_type": "choice",
-        "_value": [64]
+        "_value": [32]
     },
     "epochs": {
         "_type": "choice",
-        "_value": [5]
+        "_value": [10]
     },
     "adv_init_epsilon": {
         "_type": "quniform",
@@ -33,11 +33,11 @@
     },
     "sampling_times_delta": {
         "_type": "choice",
-        "_value": [3, 5]
+        "_value": [2, 3]
     },
     "sampling_step_theta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.001]
+        "_value": [0, 0.01, 0.0001]
     },
     "sampling_step_delta": {
         "_type": "quniform",
@@ -45,11 +45,11 @@
     },
     "sampling_noise_theta": {
         "_type": "quniform",
-        "_value": [0, 0.0001, 0.00001]
+        "_value": [0, 0.001, 0.00001]
     },
     "sampling_noise_delta": {
         "_type": "quniform",
-        "_value": [0, 0.0001, 0.00001]
+        "_value": [0, 0.001, 0.00001]
     },
     "lambda_s": {
         "_type": "choice",

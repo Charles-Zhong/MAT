@@ -59,7 +59,6 @@ for epoch in range(args["epochs"]):
     progress_bar.set_description("Training ["+str(epoch+1)+"/"+str(args["epochs"])+"]")
     ###################  Train-begin  ###################
     model.train()
-    train_loss = 0
     print("-"*20, "EPOCH:", epoch+1, "-"*20, file=file)
     for batch in train_dataloader:
         batch = {key: batch[key].to(device) for key in batch}
@@ -117,7 +116,6 @@ for epoch in range(args["epochs"]):
             output_normal_logits = output_normal.logits.detach()
             output_adv = model(**inputs)
             loss_sum = output_normal.loss + args["lambda_s"] * function.ls(output_normal_logits, output_adv.logits, args["task_name"])
-            train_loss += loss_sum.item() / args["sampling_times_theta"]
             # 反向传播
             loss_sum.backward()
             # SGLD采样并更新分布均值
@@ -137,20 +135,17 @@ for epoch in range(args["epochs"]):
 
     ###################  Validate-begin  ###################
     model.eval()
-    eval_loss = 0
     for batch in eval_dataloader:
         batch = {key: batch[key].to(device) for key in batch}
         with torch.no_grad():
             outputs = model(**batch)
-        eval_loss += outputs.loss.item()
         predictions = outputs.logits.argmax(dim=-1) if args["task_name"] != "STS-B" else outputs.logits.squeeze()
         metric.add_batch(predictions=predictions, references=batch["labels"])
     metric_data = metric.compute()
     eval_metric_list.append(metric_data)
     score = list(metric_data.values())[0]
     eval_score_list.append(score)
-    report_dic = {"default": score, "train_loss": train_loss, "eval_loss": eval_loss}
-    nni.report_intermediate_result(report_dic)
+    nni.report_intermediate_result(score)
     print("Metric:", metric_data, file=file)
     print("-"*50, file=file)
     ###################  Validate-end  ###################

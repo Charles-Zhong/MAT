@@ -5,7 +5,6 @@ import torch
 import transformers
 from tqdm.auto import tqdm
 from utils import args, preprocess, function
-from torch.utils.tensorboard import SummaryWriter
 
 args = args.parse_args()
 transformers.set_seed(args.seed)
@@ -15,7 +14,6 @@ run_time = str(int(time.time()))
 log_path = "logs/" + args.task_name + "/" + args.model_name + "/" + run_time
 os.makedirs(log_path)
 file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
-writer = SummaryWriter(log_dir=log_path)
 
 # 加载模型训练集
 local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model。
@@ -102,9 +100,6 @@ for epoch in range(args.epochs):
             # 更新扰动的分布均值
             mean_delta = args.beta_s * mean_delta + (1 - args.beta_s) * delta
         
-        avg_loss_normal = 0.0
-        avg_loss_adv = 0.0
-        avg_loss_total = 0.0
         # 2.2 sampling model parameters (theta)
         for k in range(args.sampling_times_theta):
             # 清空模型参数的梯度
@@ -123,9 +118,6 @@ for epoch in range(args.epochs):
             output_adv = model(**inputs)
             loss_adv = function.ls(output_normal_logits, output_adv.logits, args.task_name)
             loss_sum = output_normal.loss + args.lambda_s * loss_adv
-            avg_loss_normal += output_normal.loss.item()
-            avg_loss_adv += loss_adv.item()
-            avg_loss_total += loss_sum.item()
             # 反向传播
             loss_sum.backward()
             # SGLD采样并更新分布均值
@@ -133,12 +125,6 @@ for epoch in range(args.epochs):
                 p.data = function.SGLD(p.data, p.grad, args.sampling_step_theta * (iterations-current_iteration)/iterations, args.sampling_noise_theta)  # 将模型参数更新为新的采样
                 mean_theta[name] = args.beta_s * mean_theta[name] + (1 - args.beta_s) * p.data  # 更新模型参数的分布均值
         
-        avg_loss_normal /= float(args.sampling_times_theta)
-        avg_loss_adv /= float(args.sampling_times_theta)
-        avg_loss_total /= float(args.sampling_times_theta)
-        writer.add_scalar("Loss/normal", avg_loss_normal, current_iteration)
-        writer.add_scalar("Loss/adv", avg_loss_adv, current_iteration)
-        writer.add_scalar("Loss/total", avg_loss_total, current_iteration)
         # 3.update model parameters
         for key in back_parameters:
             back_parameters[key] = args.beta_p * back_parameters[key] + (1 - args.beta_p) * mean_theta[key]  # 调整备份的模型参数
@@ -155,7 +141,6 @@ for epoch in range(args.epochs):
                     outputs = model(**batch)
                 predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
                 metric.add_batch(predictions=predictions, references=batch["labels"])
-            writer.add_scalar("Loss/eval", outputs.loss, current_iteration)
             metric_data = metric.compute()
             eval_metric_list.append(metric_data)
             score = list(metric_data.values())[0]
@@ -182,7 +167,6 @@ for epoch in range(args.epochs):
                 if args.save_model == True:
                     torch.save(model, log_path + "/" + args.task_name + "_best_model.pth")
     ###################  Test-end  ###################
-            writer.flush()
             file.flush()
         torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
@@ -193,5 +177,4 @@ print("*"*19, "Best Score", "*"*19, file=file)
 print("Best Metric:", eval_metric_list[eval_score_list.index(max(eval_score_list))], file=file)
 print("*"*50, file=file)
 
-writer.close()
 file.close()
