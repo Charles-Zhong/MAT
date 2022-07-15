@@ -1,6 +1,6 @@
 from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding
+from transformers import AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding
 
 # 设置任务数据集的映射关系
 GLUE_TASKS = ["CoLA", "SST-2", "MRPC", "STS-B", "QQP",
@@ -38,23 +38,18 @@ def LoadDataset(task_name):
     actual_task = HUGGINGFACE_GLUE_TASKS[GLUE_TASKS.index(task_name)]
     raw_dataset = load_dataset("datasets/glue", actual_task)
     metric = load_metric("metrics/glue", actual_task)
+    num_labels = len(raw_dataset["train"].features["label"].names) if task_name!='STS-B' else 1 # 根据task设置类别数
     print("[Notice]: dataset", actual_task, "is loaded.")
     print("-" * 50)
-    return raw_dataset, metric
+    return raw_dataset, metric, num_labels
 
-def LoadModel(task_name, model_name):
+def LoadModel(task_name, model_name, num_labels):
     # 加载tokenizer和model
     print("-" * 8, "load the tokenizer and the model", "-" * 8)
     print("[Notice]: loading tokenizer and model...")
-    # 根据task设置类别数
-    if task_name == "MNLI-m" or task_name == "MNLI-mm":
-        num_labels = 3  # 3分类
-    elif task_name == "STS-B":
-        num_labels = 1  # 回归
-    else:
-        num_labels = 2  # 2分类
+    config = AutoConfig.from_pretrained(model_name, num_labels=num_labels)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, config=config)
     print("[Notice]: tokenizer and model are loaded.")
     print("-" * 50)
     return tokenizer, model
@@ -70,7 +65,7 @@ def Tokenize(task_name, tokenizer, raw_dataset):
         result = tokenizer(*texts)
         result["labels"] = examples["label"]
         return result
-    tokenized_dataset = raw_dataset.map(preprocess_function, batched=True, remove_columns=raw_dataset["train"].column_names)
+    tokenized_dataset = raw_dataset.map(preprocess_function, remove_columns=raw_dataset["train"].column_names, batched=True, keep_in_memory=True)
     print("[Notice]: the dataset is tokenized.")
     print("-" * 50)
     return tokenized_dataset
@@ -99,8 +94,8 @@ def MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size):
     return (train_dataloader, eval_dataloader, test_dataloader)
 
 def preprocess(task_name, model_name, batch_size):
-    raw_dataset, metric = LoadDataset(task_name)
-    tokenizer, model = LoadModel(task_name, model_name)
+    raw_dataset, metric, num_labels = LoadDataset(task_name)
+    tokenizer, model = LoadModel(task_name, model_name, num_labels)
     tokenized_dataset = Tokenize(task_name, tokenizer, raw_dataset)
     dataloader = MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size)
     return model, dataloader, metric
