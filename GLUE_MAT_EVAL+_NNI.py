@@ -150,7 +150,7 @@ for epoch in range(args["epochs"]):
             print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
             print("-"*50, file=file)
     ###################  Train-end  ###################
-            if score == 0 and current_iteration!=0 and max(eval_score_list)==0:
+            if score == 0 and current_iteration!=0 and eval_score_list[-1]==0:
                 nni.report_final_result(max(eval_score_list))
                 file.close()
                 import sys
