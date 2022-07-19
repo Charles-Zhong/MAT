@@ -2,6 +2,8 @@ from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding
 
+max_seq_length = 512
+
 # 设置任务数据集的映射关系
 GLUE_TASKS = ["CoLA", "SST-2", "MRPC", "STS-B", "QQP",
               "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI"]
@@ -62,7 +64,7 @@ def Tokenize(task_name, tokenizer, raw_dataset):
     def preprocess_function(examples):
         texts = ((examples[sentence1_key],) if sentence2_key is None else (
             examples[sentence1_key], examples[sentence2_key]))
-        result = tokenizer(*texts)
+        result = tokenizer(*texts, max_length=max_seq_length, truncation=True)
         result["labels"] = examples["label"]
         return result
     tokenized_dataset = raw_dataset.map(preprocess_function, remove_columns=raw_dataset["train"].column_names, batched=True, keep_in_memory=True)
