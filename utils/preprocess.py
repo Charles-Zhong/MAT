@@ -45,7 +45,7 @@ def LoadDataset(task_name):
     print("-" * 50)
     return raw_dataset, metric, num_labels
 
-def LoadModel(task_name, model_name, num_labels):
+def LoadModel(model_name, num_labels):
     # 加载tokenizer和model
     print("-" * 8, "load the tokenizer and the model", "-" * 8)
     print("[Notice]: loading tokenizer and model...")
@@ -97,7 +97,7 @@ def MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size):
 
 def preprocess(task_name, model_name, batch_size):
     raw_dataset, metric, num_labels = LoadDataset(task_name)
-    tokenizer, model = LoadModel(task_name, model_name, num_labels)
+    tokenizer, model = LoadModel(model_name, num_labels)
     tokenized_dataset = Tokenize(task_name, tokenizer, raw_dataset)
     dataloader = MakeDataloader(tokenized_dataset, task_name, tokenizer, batch_size)
     return model, dataloader, metric
