@@ -5,7 +5,7 @@ import time
 import torch
 import transformers
 from tqdm.auto import tqdm
-from utils import preprocess, function
+from utils import function, preprocess_glue
 
 args = nni.get_next_parameter()
 transformers.set_seed(args["seed"])
@@ -18,7 +18,7 @@ file = open(log_path + "/" + args["task_name"] + "_" + args["model_name"] + "_" 
 
 # 加载模型训练集
 local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
-model, dataloader, metric = preprocess.preprocess(args["task_name"], local_model_path + args["model_name"], args["batch_size"])
+model, dataloader, metric = preprocess_glue.preprocess(args["task_name"], local_model_path + args["model_name"], args["batch_size"])
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 
@@ -163,7 +163,7 @@ for epoch in range(args["epochs"]):
                     outputs = model(**batch)
                 predictions = outputs.logits.argmax(dim=-1) if args["task_name"] != "STS-B" else outputs.logits.squeeze()
                 for id, pre in enumerate(predictions):
-                    predict_label = preprocess.TASKS_TO_LABEL[args["task_name"]][pre.item()] if args["task_name"] != "STS-B" else round(pre.item(), 3)  # 保留3位小数
+                    predict_label = preprocess_glue.TASKS_TO_LABEL[args["task_name"]][pre.item()] if args["task_name"] != "STS-B" else round(pre.item(), 3)  # 保留3位小数
                     tsv_writer.writerow([id + t * args["batch_size"], predict_label])
             f.close()
         if args["save_model"] == "True":
