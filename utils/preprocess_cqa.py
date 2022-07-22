@@ -35,7 +35,7 @@ def Tokenize(tokenizer, raw_dataset):
         for choice in examples["choices"]['text']:
             sentences.append([examples["question"],choice])
         labels = AnswerToLabel[examples['answerKey']] if AnswerToLabel[examples['answerKey']]!='' else '-1'
-        tokenized_inputs = tokenizer(sentences, max_length=max_seq_length, padding="max_length", truncation=True)
+        tokenized_inputs = tokenizer(sentences, max_length=max_seq_length, padding=True, truncation=True)
         tokenized_inputs["labels"] = labels
         return tokenized_inputs
     tokenized_dataset = raw_dataset.map(preprocess_function, remove_columns=raw_dataset["train"].column_names, keep_in_memory=True)
