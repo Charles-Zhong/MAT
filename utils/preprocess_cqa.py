@@ -1,8 +1,25 @@
+import torch
+from itertools import chain
+from dataclasses import dataclass
 from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
-from transformers import AutoConfig, AutoTokenizer, AutoModelForMultipleChoice, default_data_collator
+from transformers import AutoConfig, AutoTokenizer, AutoModelForMultipleChoice, PreTrainedTokenizerBase
 
-max_seq_length = 256
+@dataclass
+class DataCollatorForMultipleChoice: # https://huggingface.co/docs/transformers/tasks/multiple_choice
+    tokenizer: PreTrainedTokenizerBase
+    def __call__(self, features):
+        label_name = "labels"
+        labels = [feature.pop(label_name) for feature in features]
+        batch_size = len(features)
+        num_choices = len(features[0]["input_ids"])
+        flattened_features = [[{k: v[i] for k, v in feature.items()} for i in range(num_choices)] for feature in features]
+        flattened_features = list(chain(*flattened_features))
+        batch = self.tokenizer.pad(flattened_features,return_tensors="pt")
+        batch = {k: v.view(batch_size, num_choices, -1) for k, v in batch.items()}
+        batch["labels"] = torch.tensor(labels, dtype=torch.int64)
+        return batch
+
 AnswerToLabel = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, '': -1}
 
 def LoadDataset(task_name):
@@ -33,17 +50,16 @@ def Tokenize(tokenizer, raw_dataset):
     def preprocess_function(examples):
         sentences = []
         for choice in examples["choices"]['text']:
-            sentences.append([examples["question"],choice])
-        labels = AnswerToLabel[examples['answerKey']] if AnswerToLabel[examples['answerKey']]!='' else '-1'
-        tokenized_inputs = tokenizer(sentences, max_length=max_seq_length, padding=True, truncation=True)
-        tokenized_inputs["labels"] = labels
+            sentences.append([examples["question"], choice])
+        tokenized_inputs = tokenizer(sentences)
+        tokenized_inputs["labels"] = AnswerToLabel[examples['answerKey']]
         return tokenized_inputs
     tokenized_dataset = raw_dataset.map(preprocess_function, remove_columns=raw_dataset["train"].column_names, keep_in_memory=True)
     print("[Notice]: the dataset is tokenized.")
     print("-" * 50)
     return tokenized_dataset
 
-def MakeDataloader(tokenized_dataset, batch_size):
+def MakeDataloader(tokenizer, tokenized_dataset, batch_size):
     # 设置训练集、验证集、测试集
     print("-" * 14, "make the dataloader", "-" * 15)
     print("[Notice]: making dataloader...")
@@ -51,7 +67,7 @@ def MakeDataloader(tokenized_dataset, batch_size):
     val_dataset = tokenized_dataset["validation"]
     test_dataset = tokenized_dataset["test"]
     # 创建dataloader
-    data_collator = default_data_collator
+    data_collator = DataCollatorForMultipleChoice(tokenizer)
     train_dataloader = DataLoader(train_dataset, collate_fn=data_collator, shuffle=True, batch_size=batch_size)
     eval_dataloader = DataLoader(val_dataset, collate_fn=data_collator, batch_size=batch_size)
     test_dataloader = DataLoader(test_dataset, collate_fn=data_collator, batch_size=batch_size)
@@ -63,5 +79,5 @@ def preprocess(task_name, model_name, batch_size):
     raw_dataset, metric = LoadDataset(task_name)
     tokenizer, model = LoadModel(model_name)
     tokenized_dataset = Tokenize(tokenizer, raw_dataset)
-    dataloader = MakeDataloader(tokenized_dataset, batch_size)
+    dataloader = MakeDataloader(tokenizer, tokenized_dataset, batch_size)
     return model, dataloader, metric
