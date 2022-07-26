@@ -3,7 +3,7 @@ import time
 import torch
 import transformers
 from tqdm.auto import tqdm
-from utils import args, function, preprocess_cqa
+from utils import args, function, preprocess_qa
 
 args = args.parse_args()
 transformers.set_seed(args.seed)
@@ -17,7 +17,7 @@ file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_
 if(args.task_name == "CQA"):
     dataset_name = "commonsense_qa"
     task_name = None
-elif(args.task_name in ["ARC-Easy, ARC-Challenge"]):
+elif(args.task_name not in ["ARC-Easy, ARC-Challenge"]):
     dataset_name="ai2_arc"
     task_name=args.task_name
 else:
@@ -25,7 +25,7 @@ else:
 
 # 加载模型训练集
 local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
-model, dataloader, metric = preprocess_cqa.preprocess(dataset_name, task_name, local_model_path + args.model_name, args.batch_size)
+model, dataloader, metric = preprocess_qa.preprocess(dataset_name, task_name, local_model_path + args.model_name, args.batch_size)
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 

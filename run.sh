@@ -1,4 +1,4 @@
-# usage: XXX-MAT.py [-h] [--task_name {CoLA,SST-2,MRPC,STS-B,QQP,MNLI-m,MNLI-mm,QNLI,RTE,WNLI,commonsense_qa}]
+# usage: XXX-MAT.py [-h] [--task_name {CoLA,SST-2,MRPC,STS-B,QQP,MNLI-m,MNLI-mm,QNLI,RTE,WNLI,CQA,ARC-Easy,ARC-Challenge}]]
 #                    [--model_name {bert-base-uncased,roberta-base,roberta-large}]
 #                    [--seed SEED] [--batch_size BATCH_SIZE] [--epochs EPOCHS]
 #                    [--adv_init_epsilon ADV_INIT_EPSILON] [--adv_init_type {zero,rand,randn}]
@@ -9,7 +9,7 @@
 #!/bin/bash
 PY_FILE=QA_MAT.py
 
-TASK_NAME=commonsense_qa
+TASK_NAME=ARC-Easy
 MODEL_NAME=bert-base-uncased
 
 SEED=42
