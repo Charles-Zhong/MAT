@@ -150,11 +150,7 @@ for epoch in range(args["epochs"]):
             print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
             print("-"*50, file=file)
     ###################  Train-end  ###################
-            if score <= 0 and current_iteration!=0 and eval_score_list[-2]<=0:
-                nni.report_final_result(max(eval_score_list))
-                file.close()
-                import sys
-                sys.exit(0)
+
     ###################  Test-begin  ###################
             if score == max(eval_score_list):
                 with(open(log_path + "/" + args["task_name"]+".tsv", "w")) as f_tsv:

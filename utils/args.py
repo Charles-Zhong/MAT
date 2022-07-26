@@ -3,7 +3,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a model with MAT training mode.")
     parser.add_argument("--task_name", type=str, default="CoLA", 
-                        choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI", "commonsense_qa"], 
+                        choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI", "CQA", "ARC-Easy", "ARC-Challenge"], 
                         help="The name of the task.")
     parser.add_argument("--model_name", type=str, default="bert-base-uncased", 
                         choices=["bert-base-uncased", "roberta-large"], 

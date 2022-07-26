@@ -14,7 +14,7 @@ log_path = "logs/" + args.task_name + "/" + args.model_name + "/" + run_time
 os.makedirs(log_path)
 file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
 
-if(args.task_name == "commonsense_qa"):
+if(args.task_name == "CQA"):
     dataset_name = "commonsense_qa"
     task_name = None
 elif(args.task_name in ["ARC-Easy, ARC-Challenge"]):
