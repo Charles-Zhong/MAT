@@ -6,7 +6,6 @@ from tqdm.auto import tqdm
 from utils import args, function, preprocess_cqa
 
 args = args.parse_args()
-args.task_name = "commonsense_qa"
 transformers.set_seed(args.seed)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -15,9 +14,18 @@ log_path = "logs/" + args.task_name + "/" + args.model_name + "/" + run_time
 os.makedirs(log_path)
 file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
 
+if(args.task_name == "commonsense_qa"):
+    dataset_name = "commonsense_qa"
+    task_name = None
+elif(args.task_name in ["ARC-Easy, ARC-Challenge"]):
+    dataset_name="ai2_arc"
+    task_name=args.task_name
+else:
+    raise ValueError(args.task_name, "is not support.")
+
 # 加载模型训练集
 local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
-model, dataloader, metric = preprocess_cqa.preprocess(args.task_name, local_model_path + args.model_name, args.batch_size)
+model, dataloader, metric = preprocess_cqa.preprocess(dataset_name, task_name, local_model_path + args.model_name, args.batch_size)
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 
