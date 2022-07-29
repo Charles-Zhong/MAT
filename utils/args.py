@@ -3,10 +3,10 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a model with MAT training mode.")
     parser.add_argument("--task_name", type=str, default="CoLA", 
-                        choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI", "CQA", "ARC-Easy", "ARC-Challenge"], 
+                        choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI", "CQA", "ANLI"], 
                         help="The name of the task.")
     parser.add_argument("--model_name", type=str, default="bert-base-uncased", 
-                        choices=["bert-base-uncased", "roberta-large"], 
+                        choices=["bert-base-uncased", "roberta-large", "roberta-large-mnli"], 
                         help="Finetune base model.")
     parser.add_argument("--seed", type=int, default=42,
                         help="A seed for reproducible training.")
@@ -37,7 +37,7 @@ def parse_args():
                         help="Exponential damping beta for stability in SGLD sampling.")
     parser.add_argument("--beta_p", type=float, default=0.5,
                         help="Exponential damping beta for stability in parameters updating.")
-    parser.add_argument("--save_model", type=bool, default=False,
+    parser.add_argument("--save_model", action="store_true",
                         help="Save the best model during training.")
     args = parser.parse_args()
     return args
