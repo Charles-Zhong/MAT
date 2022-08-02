@@ -23,7 +23,7 @@ train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 
 # 设置进度条
-total_iterations = args.epochs * len(train_dataloader)
+total_iterations = args["epochs"] * len(train_dataloader)
 progress_bar = tqdm(range(total_iterations))
 
 eval_step = len(train_dataloader) // 10 # 1个Epoch评估10次
