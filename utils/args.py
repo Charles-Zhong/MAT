@@ -6,7 +6,7 @@ def parse_args():
                         choices=["CoLA", "SST-2", "MRPC", "STS-B", "QQP", "MNLI-m", "MNLI-mm", "QNLI", "RTE", "WNLI", "CQA", "ANLI"], 
                         help="The name of the task.")
     parser.add_argument("--model_name", type=str, default="bert-base-uncased", 
-                        choices=["bert-base-uncased", "roberta-large", "roberta-large-mnli"], 
+                        choices=["bert-base-uncased", "roberta-large"], 
                         help="Finetune base model.")
     parser.add_argument("--seed", type=int, default=42,
                         help="A seed for reproducible training.")

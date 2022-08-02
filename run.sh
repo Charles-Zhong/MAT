@@ -1,5 +1,5 @@
 # usage: XXX-MAT.py [-h] [--task_name {CoLA,SST-2,MRPC,STS-B,QQP,MNLI-m,MNLI-mm,QNLI,RTE,WNLI,CQA,ANLI}]]
-#                    [--model_name {bert-base-uncased,roberta-large,roberta-large-mnli}]
+#                    [--model_name {bert-base-uncased,roberta-large}]
 #                    [--seed SEED] [--batch_size BATCH_SIZE] [--epochs EPOCHS]
 #                    [--adv_init_type {zero,rand,randn}] [--adv_init_epsilon ADV_INIT_EPSILON]
 #                    [--sampling_times_theta SAMPLING_TIMES_THETA] [--sampling_times_delta SAMPLING_TIMES_DELTA]
@@ -7,22 +7,22 @@
 #                    [--sampling_noise_theta SAMPLING_NOISE_THETA] [--sampling_noise_delta SAMPLING_NOISE_DELTA]
 #                    [--lambda_s LAMBDA_S] [--beta_s BETA_S] [--beta_p BETA_P] [--save_model SAVE_MODEL]
 #!/bin/bash
-PY_FILE=MAT.py
+PY_FILE=MAT_EVAL+.py
 
-TASK_NAME=ANLI
-MODEL_NAME=bert-base-uncased
+TASK_NAME=CoLA
+MODEL_NAME=roberta-large
 
 SEED=42
 BATCH_SIZE=8
-EPOCHS=1
+EPOCHS=3
 
 ADV_INIT_TYPE=zero
 ADV_INIT_EPSILON=0.001
 
-SAMPLING_TIMES_THETA=3
+SAMPLING_TIMES_THETA=10
 SAMPLING_TIMES_DELTA=2
 
-SAMPLING_STEP_THETA=0.01
+SAMPLING_STEP_THETA=0.001
 SAMPLING_STEP_DELTA=0.005
 
 SAMPLING_NOISE_THETA=0.0001
