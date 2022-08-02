@@ -82,7 +82,7 @@ def LoadModel(task_name, model_name):
     if TASKS_TO_DATASETS[task_name] == "commonsense_qa":
         model = AutoModelForMultipleChoice.from_pretrained(model_name)
     elif TASKS_TO_DATASETS[task_name] in ["glue", "anli"]:
-        num_labels = len(TASKS_TO_LABELS[task_name])
+        num_labels = len(TASKS_TO_LABELS[task_name]) if task_name != "STS-B" else 1
         model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
     print("[Notice]: tokenizer and model are loaded.")
     print("-" * 50)
