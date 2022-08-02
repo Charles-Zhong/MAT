@@ -120,8 +120,8 @@ for epoch in range(args["epochs"]):
             loss_sum.backward()
             # SGLD采样并更新分布均值
             for name, p in model.named_parameters():
-                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args.sampling_step_theta)
-                p.data = function.SGLD(p.data, p.grad, sampling_step, args.sampling_noise_theta)  # 将模型参数更新为新的采样
+                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args["sampling_step_theta"])
+                p.data = function.SGLD(p.data, p.grad, sampling_step, args["sampling_noise_theta"])  # 将模型参数更新为新的采样
                 mean_theta[name] = args["beta_s"] * mean_theta[name] + (1 - args["beta_s"]) * p.data  # 更新模型参数的分布均值
 
         # 3.update model parameters
