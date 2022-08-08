@@ -5,7 +5,6 @@ from datasets import load_dataset, load_metric
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, AutoModelForMultipleChoice, PreTrainedTokenizerBase
 
-max_seq_length = 512
 anli_part = "_r1"
 
 TASKS_TO_DATASETS = {"CoLA": "glue", "SST-2": "glue", "MRPC": "glue", "STS-B": "glue", "QQP": "glue",
@@ -96,14 +95,14 @@ def Tokenize(task_name, tokenizer, raw_dataset):
         sentences = []
         for choice in examples["choices"]["text"]:
             sentences.append(["Q: "+examples["question"], "A: " + choice])
-        result = tokenizer(sentences, max_length=max_seq_length, truncation=True)
+        result = tokenizer(sentences)
         result["labels"] = ANSWERS_TO_LABELS[examples['answerKey']]
         return result
     def preprocess_function_glue(examples):
         sentence1_key, sentence2_key = TASKS_TO_KEYS[task_name]
         texts = ((examples[sentence1_key],) if sentence2_key is None else (
             examples[sentence1_key], examples[sentence2_key]))
-        result = tokenizer(*texts, max_length=max_seq_length, truncation=True)
+        result = tokenizer(*texts)
         result["labels"] = examples["label"]
         return result
     preprocess_function = preprocess_function_qa if task_name=="CQA" else preprocess_function_glue
