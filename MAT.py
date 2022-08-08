@@ -2,12 +2,16 @@ import os
 import csv
 import time
 import torch
-import transformers
+import random
+import numpy as np
 from tqdm.auto import tqdm
 from utils import args, function, preprocess
 
 args = args.parse_args()
-transformers.set_seed(args.seed)
+random.seed(args.seed)
+np.random.seed(args.seed)
+torch.manual_seed(args.seed)
+torch.cuda.manual_seed_all(args.seed)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 run_time = str(int(time.time()))
