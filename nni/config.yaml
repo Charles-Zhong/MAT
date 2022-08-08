@@ -1,7 +1,7 @@
-experiment_name: GLUE-MAT
+experiment_name: MAT
 search_space_file: search_space.json
 
-trial_command: python GLUE_MAT_EVAL+_NNI.py
+trial_command: python MAT_EVAL+_NNI.py
 trial_code_directory: ..
 
 trial_concurrency: 1
