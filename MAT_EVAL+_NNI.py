@@ -139,7 +139,7 @@ for epoch in range(args["epochs"]):
     ###################  Train-end  ###################
 
     ###################  Validate-begin  ###################
-        if current_iteration % eval_step == 0:
+        if current_iteration > 0 and current_iteration % eval_step == 0:
             model.eval()
             for batch in eval_dataloader:
                 batch = {key: batch[key].to(device) for key in batch}
@@ -175,7 +175,7 @@ for epoch in range(args["epochs"]):
                     torch.save(model, log_path + "/" + args["task_name"] + "_best_model.pth")
     ###################  Test-end  ###################
             file.flush()
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
 
