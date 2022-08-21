@@ -40,9 +40,10 @@ def SGLD(x, grad, step, epsilon):
     x = x - step * grad + math.sqrt(2 * step) * noise
     return x
 
-def dynamic_rate(total_iterations, current_iteration, arg_sampling_step):
+def dynamic_rate(total_iterations, current_iteration, arg_sampling_step, grad, epsilon=1e-08):
     if (current_iteration < total_iterations * 0.05):
         sampling_step = arg_sampling_step * (current_iteration + 1) / total_iterations
     else:
         sampling_step = arg_sampling_step * (total_iterations - current_iteration) / total_iterations
+    sampling_step = sampling_step / (torch.norm(grad) + epsilon)
     return sampling_step

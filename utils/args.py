@@ -19,23 +19,21 @@ def parse_args():
                         help="Initialization type of adversarial perturbation.")
     parser.add_argument("--adv_init_epsilon", type=float, default=0.001,
                         help="Initialization size of adversarial perturbation.")
-    parser.add_argument("--sampling_times_theta", type=int, default=30,
+    parser.add_argument("--sampling_times_theta", type=int, default=20,
                         help="SGLD sampling times for model parameters.")
-    parser.add_argument("--sampling_times_delta", type=int, default=5,
+    parser.add_argument("--sampling_times_delta", type=int, default=10,
                         help="SGLD sampling times for adversarial perturbation.")
-    parser.add_argument("--sampling_step_theta", type=float, default=0.001,
+    parser.add_argument("--sampling_step_theta", type=float, default=0.00001,
                         help="SGLD sampling step for model parameters.")
-    parser.add_argument("--sampling_step_delta", type=float, default=0.001,
+    parser.add_argument("--sampling_step_delta", type=float, default=0.00001,
                         help="SGLD sampling step for adversarial perturbation.")
-    parser.add_argument("--sampling_noise_theta", type=float, default=1e-5,
-                        help="SGLD sampling noise for model parameters.")
-    parser.add_argument("--sampling_noise_delta", type=float, default=1e-5,
-                        help="SGLD sampling noise for adversarial perturbation.")
+    parser.add_argument("--sampling_noise_ratio", type=float, default=0.1,
+                        help="SGLD sampling noise ratio.")
     parser.add_argument("--lambda_s", type=float, default=1,
                         help="Tuning parameter lambda of the objective function.")
     parser.add_argument("--beta_s", type=float, default=0.5,
                         help="Exponential damping beta for stability in SGLD sampling.")
-    parser.add_argument("--beta_p", type=float, default=0.5,
+    parser.add_argument("--beta_p", type=float, default=0.9,
                         help="Exponential damping beta for stability in parameters updating.")
     parser.add_argument("--save_model", action="store_true",
                         help="Save the best model during training.")
