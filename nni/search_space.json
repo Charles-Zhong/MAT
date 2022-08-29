@@ -1,7 +1,7 @@
 {
     "task_name": {
         "_type": "choice",
-        "_value": ["CoLA"]
+        "_value": ["MRPC"]
     },
     "model_name": {
         "_type": "choice",
@@ -13,58 +13,54 @@
     },
     "batch_size": {
         "_type": "choice",
-        "_value": [32]
+        "_value": [8]
     },
     "epochs": {
         "_type": "choice",
-        "_value": [10]
-    },
-    "adv_init_epsilon": {
-        "_type": "quniform",
-        "_value": [0, 0.01, 0.0001]
+        "_value": [5]
     },
     "adv_init_type": {
         "_type": "choice",
-        "_value": ["zero","rand","randn"]
+        "_value": ["randn"]
+    },
+    "adv_init_epsilon": {
+        "_type": "quniform",
+        "_value": [0.0001, 0.001, 0.0001]
     },
     "sampling_times_theta": {
         "_type": "choice",
-        "_value": [20, 30]
+        "_value": [10]
     },
     "sampling_times_delta": {
         "_type": "choice",
-        "_value": [2, 3]
+        "_value": [10]
     },
     "sampling_step_theta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.0001]
+        "_value": [0.00001, 0.0001, 0.00001]
     },
     "sampling_step_delta": {
         "_type": "quniform",
-        "_value": [0, 0.01, 0.0001]
+        "_value": [0.00001, 0.0001, 0.00001]
     },
     "sampling_noise_theta": {
         "_type": "quniform",
-        "_value": [0, 0.001, 0.00001]
+        "_value": [0.000001, 0.00001, 0.000001]
     },
     "sampling_noise_delta": {
         "_type": "quniform",
-        "_value": [0, 0.001, 0.00001]
+        "_value": [0.000001, 0.00001, 0.000001]
     },
     "lambda_s": {
         "_type": "choice",
-        "_value": [0.1, 0.5, 1, 3, 5]
+        "_value": [1]
     },
     "beta_s": {
         "_type": "choice",
-        "_value": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        "_value": [0.5]
     },
     "beta_p": {
         "_type": "choice",
-        "_value": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    },
-    "save_model": {
-        "_type": "choice",
-        "_value": ["False"]
+        "_value": [0.5]
     }
 }

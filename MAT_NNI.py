@@ -47,8 +47,8 @@ print("EPOCH_NUM:", args["epochs"], file=file)
 print("BATCH_SIZE:", args["batch_size"], file=file)
 print("="*18, "MAT Training", "="*18, file=file)  # MAT训练参数
 print("Adversarial_Training_type:", "MAT", file=file)
-print("Adversarial_init_epsilon:", args["adv_init_epsilon"], file=file)
 print("Adversarial_init_type:", args["adv_init_type"], file=file)
+print("Adversarial_init_epsilon:", args["adv_init_epsilon"], file=file)
 print("Sampling_times_theta:", args["sampling_times_theta"], file=file)
 print("Sampling_times_delta:", args["sampling_times_delta"], file=file)
 print("Sampling_step_theta:", args["sampling_step_theta"], file=file)
@@ -100,7 +100,8 @@ for epoch in range(args["epochs"]):
             # 反向传播
             loss_adv.backward()
             # SGLD采样
-            delta = function.SGLD(delta.detach(), - delta.grad, args["sampling_step_delta"], args["sampling_step_delta"] * args["sampling_noise_ratio"]).detach()
+            noise_epsion = args["sampling_step_delta"] * args["sampling_noise_ratio"]
+            delta = function.SGLD(delta.detach(), - delta.grad, args["sampling_step_delta"], noise_epsion).detach()
             # 更新扰动的分布均值
             mean_delta = args["beta_s"] * mean_delta + (1 - args["beta_s"]) * delta
         
@@ -126,8 +127,8 @@ for epoch in range(args["epochs"]):
             loss_sum.backward()
             # SGLD采样并更新分布均值
             for name, p in model.named_parameters():
-                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args["sampling_step_theta"], p.grad)
-                noise_epsion = sampling_step * args["sampling_noise_ratio"]
+                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args["sampling_step_theta"])
+                noise_epsion = args["sampling_step_theta"] * args["sampling_noise_ratio"]
                 p.data = function.SGLD(p.data, p.grad, sampling_step, noise_epsion)  # 将模型参数更新为新的采样
                 mean_theta[name] = args["beta_s"] * mean_theta[name] + (1 - args["beta_s"]) * p.data  # 更新模型参数的分布均值
         
@@ -171,11 +172,8 @@ for epoch in range(args["epochs"]):
                             predict_label = preprocess.TASKS_TO_LABELS[args["task_name"]][pre.item()] if args["task_name"] != "STS-B" else round(pre.item(), 3)  # 保留3位小数
                             tsv_writer.writerow([id + t * args["batch_size"], predict_label])
                     f_tsv.close()
-                if args["save_model"] == True:
-                    torch.save(model, log_path + "/" + args["task_name"] + "_best_model.pth")
     ###################  Test-end  ###################
             file.flush()
-        # torch.cuda.empty_cache()
         current_iteration = current_iteration + 1
         progress_bar.update(1)
 
