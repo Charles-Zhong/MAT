@@ -20,8 +20,8 @@ os.makedirs(log_path)
 file = open(log_path + "/" + args.task_name + "_" + args.model_name + "_" + run_time + ".log", "w")  # 设置日志文件
 
 # 加载模型训练集
-local_model_path = args.model_path  # local_model_dir, 设置为""时会自动从huggingface下载model。
-model, dataloader, metric = preprocess.preprocess(args.task_name, local_model_path + "/" + args.model_name, args.batch_size)
+local_model_path = args.model_path  + "/" if args.model_path != "" else "" # local_model_dir, 设置为""时会自动从huggingface下载model
+model, dataloader, metric = preprocess.preprocess(args.task_name, local_model_path + args.model_name, args.batch_size)
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 

@@ -38,7 +38,7 @@ TASKS_TO_KEYS = {"CoLA": ("sentence", None), "SST-2": ("sentence", None), "MRPC"
 TASKS_TO_LABELS = {"CoLA": ("0", "1"), "SST-2": ("0", "1"), "MRPC": ("0", "1"), "QQP": ("0", "1"),
                    "MNLI-m": ("entailment", "neutral", "contradiction"), "MNLI-mm": ("entailment", "neutral", "contradiction"),
                    "QNLI": ("entailment", "not_entailment"), "RTE": ("entailment", "not_entailment"),
-                   "WNLI": ("0", "1"), "ANLI": ("0", "1", "2")}
+                   "WNLI": ("0", "1"), "ANLI": ("0", "1", "2"), "CQA": ("A", "B","C","D","E")}
 
 DATASETS_TO_METRICS = {"glue":"glue", "commonsense_qa":"accuracy", "anli":"accuracy"}
 
