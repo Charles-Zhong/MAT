@@ -39,5 +39,7 @@ def parse_args():
                         help="Exponential damping beta for stability in parameters updating.")
     parser.add_argument("--save_model", action="store_true",
                         help="Save the best model during training.")
+    parser.add_argument("--eval_times", type=int, default=10,
+                        help="Number of evaluations per epoch.")
     args = parser.parse_args()
     return args

@@ -30,7 +30,7 @@ model.to(device)
 total_iterations = args["epochs"] * len(train_dataloader)
 progress_bar = tqdm(range(total_iterations))
 
-eval_step = len(train_dataloader) // 10 # 1个Epoch评估10次
+eval_step = len(train_dataloader) // args["eval_times"] # 默认1个Epoch评估10次
 
 eval_metric_list = []  # 验证集metric列表
 eval_score_list = []  # 验证集score列表
