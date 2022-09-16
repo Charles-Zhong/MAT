@@ -4,12 +4,11 @@ import torch
 def init_delta(size, epsilon=1e-1, init_type="zero"):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if init_type == "zero": # 全零
-        delta = torch.zeros(size, device=device)
+        return torch.zeros(size, device=device)
     elif init_type == "rand": # 随机分布
-        delta = torch.rand(size, device=device) * epsilon
+        return torch.rand(size, device=device) * epsilon
     elif init_type == "randn": # 正态分布
-        delta = torch.randn(size, device=device) * epsilon
-    return delta
+        return torch.randn(size, device=device) * epsilon
 
 def update_delta(delta, Adv_epsilon, Adv_max_norm):  # 仅用于PGD, FreeAT, FreeLB, SMART
     delta_grad = delta.grad  # delta的梯度

@@ -25,7 +25,7 @@
     },
     "adv_init_type": {
         "_type": "choice",
-        "_value": ["zero, rand, randn"]
+        "_value": ["zero", "rand", "randn"]
     },
     "adv_init_epsilon": {
         "_type": "quniform",
