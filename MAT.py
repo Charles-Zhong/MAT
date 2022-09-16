@@ -169,12 +169,14 @@ for epoch in range(args.epochs):
                         with torch.no_grad():
                             outputs = model(**batch)
                         predictions = outputs.logits.argmax(dim=-1) if args.task_name != "STS-B" else outputs.logits.squeeze()
-                        metric.add_batch(predictions=predictions, references=batch["labels"])
+                        if args.task_name == "ANLI":
+                            metric.add_batch(predictions=predictions, references=batch["labels"])
                         for id, pre in enumerate(predictions):
                             predict_label = preprocess.TASKS_TO_LABELS[args.task_name][pre.item()] if args.task_name != "STS-B" else round(pre.item(), 3)  # 保留3位小数
                             tsv_writer.writerow([id + t * args.batch_size, predict_label])
-                    metric_data = metric.compute()
-                    print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
+                    if args.task_name == "ANLI":
+                        metric_data = metric.compute()
+                        print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
                     f_tsv.close()
     ###################  Test-end  ###################
             file.flush()
