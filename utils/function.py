@@ -40,9 +40,9 @@ def SGLD(x, grad, step, epsilon):
     x = x - step * grad + math.sqrt(2 * step) * noise
     return x
 
-def dynamic_rate(total_iterations, current_iteration, arg_sampling_step):
-    if (current_iteration < total_iterations * 0.05):
-        sampling_step = arg_sampling_step * (current_iteration + 1) / total_iterations
+def dynamic_rate(total_iterations, current_iteration, sampling_step, warm_up):
+    if (current_iteration < total_iterations * warm_up):
+        sampling_step = sampling_step * (current_iteration + 1) / total_iterations
     else:
-        sampling_step = arg_sampling_step * (total_iterations - current_iteration) / total_iterations
+        sampling_step = sampling_step * (total_iterations - current_iteration) / total_iterations
     return sampling_step
