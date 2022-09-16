@@ -188,5 +188,5 @@ print("*"*50, file=file)
 file.close()
 
 csv_file = open("logs/" + args.task_name + "/" + args.task_name + "_" + args.model_name + ".csv", "a") 
-print(run_time + "," + str(args.seed) + "," + str(args.epochs) + "," + str(args.batch_size) + "," + str(args.adv_init_type) + "," + str(args.adv_init_epsilon) + "," + str(args.warm_up) + "," +str(args.sampling_times_theta) + "," + str(args.sampling_times_delta) + "," + str(args.sampling_step_theta) + "," + str(args.sampling_step_delta) + "," + str(args.sampling_noise_ratio) + "," + str(args.lambda_s) + "," + str(args.beta_s) + "," + str(args.beta_p) + "," + str(args.eval_times) + "," +str(max(eval_score_list)), file=csv_file)
+print(run_time + "," + str(args.seed) + "," + str(args.epochs) + "," + str(args.batch_size) + "," + str(args.adv_init_type) + "," + str(args.adv_init_epsilon) + "," + str(args.warm_up) + "," + str(args.sampling_times_theta) + "," + str(args.sampling_times_delta) + "," + str(args.sampling_step_theta) + "," + str(args.sampling_step_delta) + "," + str(args.sampling_noise_ratio) + "," + str(args.lambda_s) + "," + str(args.beta_s) + "," + str(args.beta_p) + "," + str(args.eval_times) + "," + str(max(eval_score_list)), file=csv_file)
 csv_file.close()

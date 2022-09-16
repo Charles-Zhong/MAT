@@ -21,7 +21,7 @@ os.makedirs(log_path)
 file = open(log_path + "/" + args["task_name"] + "_" + args["model_name"] + "_" + run_time + ".log", "w")  # 设置日志文件
 
 # 加载模型训练集
-local_model_path = "models/"  # "models/" 为local的model_dir, 设置为""时会自动从huggingface下载model
+local_model_path = args["model_path"]  + "/" if args["model_path"] != "" else "" # local_model_dir, 设置为""时会自动从huggingface下载model
 model, dataloader, metric = preprocess.preprocess(args["task_name"], local_model_path + args["model_name"], args["batch_size"])
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
@@ -49,6 +49,7 @@ print("="*18, "MAT Training", "="*18, file=file)  # MAT训练参数
 print("Adversarial_Training_type:", "MAT", file=file)
 print("Adversarial_init_type:", args["adv_init_type"], file=file)
 print("Adversarial_init_epsilon:", args["adv_init_epsilon"], file=file)
+print("Warm_up:", args["warm_up"], file=file)
 print("Sampling_times_theta:", args["sampling_times_theta"], file=file)
 print("Sampling_times_delta:", args["sampling_times_delta"], file=file)
 print("Sampling_step_theta:", args["sampling_step_theta"], file=file)
@@ -57,6 +58,7 @@ print("Sampling_noise_ratio:", args["sampling_noise_ratio"], file=file)
 print("Lambda:", args["lambda_s"], file=file)
 print("Beta_s:", args["beta_s"], file=file)
 print("Beta_p:", args["beta_p"], file=file)
+print("eval_times:", args["eval_times"], file=file)
 print("*"*50, file=file)
 file.flush()
 for epoch in range(args["epochs"]):
@@ -122,12 +124,12 @@ for epoch in range(args["epochs"]):
             output_normal_logits = output_normal.logits.detach()
             output_adv = model(**inputs)
             loss_adv = function.ls(output_normal_logits, output_adv.logits, args["task_name"])
-            loss_sum = output_normal.loss + args["lambda_s"]
+            loss_sum = output_normal.loss + args["lambda_s"] * loss_adv
             # 反向传播
             loss_sum.backward()
             # SGLD采样并更新分布均值
             for name, p in model.named_parameters():
-                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args["sampling_step_theta"])
+                sampling_step = function.dynamic_rate(total_iterations, current_iteration, args["sampling_step_theta"], args["warm_up"])
                 noise_epsion = args["sampling_step_theta"] * args["sampling_noise_ratio"]
                 p.data = function.SGLD(p.data, p.grad, sampling_step, noise_epsion)  # 将模型参数更新为新的采样
                 mean_theta[name] = args["beta_s"] * mean_theta[name] + (1 - args["beta_s"]) * p.data  # 更新模型参数的分布均值
@@ -139,7 +141,7 @@ for epoch in range(args["epochs"]):
         # [end] MAT Training
     ###################  Train-end  ###################
 
-    ###################  Validate-begin  ###################
+    ###################  eval-begin  ###################
         if current_iteration > 0 and current_iteration % eval_step == 0:
             model.eval()
             for batch in eval_dataloader:
@@ -155,22 +157,26 @@ for epoch in range(args["epochs"]):
             nni.report_intermediate_result(score)
             print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
             print("-"*50, file=file)
-    ###################  Train-end  ###################
+    ###################  eval-end  ###################
 
     ###################  Test-begin  ###################
-            if score == max(eval_score_list):
+            if args["predict"] == "True" and (args["task_name"] == "ANLI" or score == max(eval_score_list)):
                 with(open(log_path + "/" + args["task_name"]+".tsv", "w")) as f_tsv:
                     tsv_writer = csv.writer(f_tsv, delimiter='\t')
                     tsv_writer.writerow(["index", "prediction"])
                     for t, batch in enumerate(test_dataloader):
                         batch = {key: batch[key].to(device) for key in batch}
-                        batch['labels'] = None # model的outputs默认会利用batch中的labels计算loss，测试集label默认为-1，会导致报错，labels设为None可规避该问题
+                        if args["task_name"]!="ANLI":
+                            batch['labels'] = None # model的outputs默认会利用batch中的labels计算loss，测试集label默认为-1，会导致报错，labels设为None可规避该问题
                         with torch.no_grad():
                             outputs = model(**batch)
                         predictions = outputs.logits.argmax(dim=-1) if args["task_name"] != "STS-B" else outputs.logits.squeeze()
+                        metric.add_batch(predictions=predictions, references=batch["labels"])
                         for id, pre in enumerate(predictions):
                             predict_label = preprocess.TASKS_TO_LABELS[args["task_name"]][pre.item()] if args["task_name"] != "STS-B" else round(pre.item(), 3)  # 保留3位小数
                             tsv_writer.writerow([id + t * args["batch_size"], predict_label])
+                    metric_data = metric.compute()
+                    print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
                     f_tsv.close()
     ###################  Test-end  ###################
             file.flush()
@@ -182,5 +188,8 @@ nni.report_final_result(max(eval_score_list))
 print("*"*19, "Best Score", "*"*19, file=file)
 print("Best Metric:", eval_metric_list[eval_score_list.index(max(eval_score_list))], file=file)
 print("*"*50, file=file)
-
 file.close()
+
+csv_file = open("logs/" + args["task_name"] + "/" + args["task_name"] + "_" + args["model_name"] + ".csv", "a") 
+print(run_time + "," + str(args["seed"]) + "," + str(args["epochs"]) + "," + str(args["batch_size"]) + "," + str(args["adv_init_type"]) + "," + str(args["adv_init_epsilon"]) + "," + str(args["warm_up"]) + "," + str(args["sampling_times_theta"]) + "," + str(args["sampling_times_delta"]) + "," + str(args["sampling_step_theta"]) + "," + str(args["sampling_step_delta"]) + "," + str(args["sampling_noise_ratio"]) + "," + str(args["lambda_s"]) + "," + str(args["beta_s"]) + "," + str(args["beta_p"]) + "," + str(args["eval_times"]) + "," + str(max(eval_score_list)), file=csv_file)
+csv_file.close()
