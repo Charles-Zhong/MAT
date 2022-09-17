@@ -154,7 +154,6 @@ for epoch in range(args.epochs):
             score = list(metric_data.values())[0]
             eval_score_list.append(score)
             print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
-            print("-"*50, file=file)
     ###################  eval-end  ###################
 
     ###################  Test-begin  ###################
@@ -176,8 +175,9 @@ for epoch in range(args.epochs):
                             tsv_writer.writerow([id + t * args.batch_size, predict_label])
                     if args.task_name == "ANLI":
                         metric_data = metric.compute()
-                        print("Iteration:", current_iteration, "Metric:", metric_data, file=file)
+                        print("Iteration:", current_iteration, "Test Metric:", metric_data, file=file)
                     f_tsv.close()
+            print("-"*50, file=file)
     ###################  Test-end  ###################
             file.flush()
         current_iteration = current_iteration + 1

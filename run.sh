@@ -1,12 +1,3 @@
-# usage: MAT.py      [-h] [--task_name {CoLA,SST-2,MRPC,STS-B,QQP,MNLI-m,MNLI-mm,QNLI,RTE,WNLI,ANLI}]]
-#                    [--model_path MODEL_PATH] [--model_name] [--seed SEED] [--batch_size BATCH_SIZE] [--epochs EPOCHS]
-#                    [--adv_init_type {zero,rand,randn}] [--adv_init_epsilon ADV_INIT_EPSILON] [--warm_up WARM_UP]
-#                    [--sampling_times_theta SAMPLING_TIMES_THETA] [--sampling_times_delta SAMPLING_TIMES_DELTA]
-#                    [--sampling_step_theta SAMPLING_STEP_THETA] [--sampling_step_delta SAMPLING_STEP_DELTA]
-#                    [--sampling_noise_ratio SAMPLING_NOISE_RATIO] [--lambda_s LAMBDA_S]
-#                    [--beta_s BETA_S] [--beta_p BETA_P] [--eval_times EVAL_TIMES] [--predict PREDICT]
-#!/bin/bash
-
 PY_FILE=MAT.py
 
 TASK_NAME=CoLA
