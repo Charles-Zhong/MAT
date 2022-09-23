@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding
 
 anli_part = "_r1"
+token_max_length = 512 
 
 TASKS_TO_DATASETS = {"CoLA": "glue", "SST-2": "glue", "MRPC": "glue", "STS-B": "glue", "QQP": "glue",
                      "MNLI-m": "glue", "MNLI-mm": "glue", "QNLI": "glue", "RTE": "glue", "WNLI": "glue",
@@ -12,17 +13,17 @@ TASKS_TO_TASKS = {"CoLA": "cola", "SST-2": "sst2", "MRPC": "mrpc", "STS-B": "sts
                   "MNLI-m": "mnli", "MNLI-mm": "mnli", "QNLI": "qnli", "RTE": "rte", "WNLI": "wnli",
                   "ANLI": None}
 
-TASKS_TO_DATASETS_KEY = {"CoLA": ("train","validation","test"),
-                         "SST-2": ("train","validation","test"),
-                         "MRPC": ("train","validation","test"),
-                         "STS-B": ("train","validation","test"),
-                         "QQP": ("train","validation","test"),
-                         "MNLI-m": ("train","validation_matched","test_matched"),
-                         "MNLI-mm": ("train","validation_mismatched","test_mismatched"),
-                         "QNLI": ("train","validation","test"), 
-                         "RTE": ("train","validation","test"), 
-                         "WNLI": ("train","validation","test"),
-                         "ANLI": ("train"+anli_part,"dev"+anli_part,"test"+anli_part)}
+TASKS_TO_DATASETS_KEY = {"CoLA": ("train", "validation", "test"),
+                         "SST-2": ("train", "validation", "test"),
+                         "MRPC": ("train", "validation", "test"),
+                         "STS-B": ("train", "validation", "test"),
+                         "QQP": ("train", "validation", "test"),
+                         "MNLI-m": ("train", "validation_matched", "test_matched"),
+                         "MNLI-mm": ("train", "validation_mismatched", "test_mismatched"),
+                         "QNLI": ("train", "validation", "test"), 
+                         "RTE": ("train", "validation", "test"), 
+                         "WNLI": ("train", "validation", "test"),
+                         "ANLI": ("train"+anli_part, "dev"+anli_part, "test"+anli_part)}
 
 TASKS_TO_KEYS = {"CoLA": ("sentence", None), "SST-2": ("sentence", None), "MRPC": ("sentence1", "sentence2"),
                  "STS-B": ("sentence1", "sentence2"), "QQP": ("question1", "question2"), "MNLI-m": ("premise", "hypothesis"),
@@ -68,7 +69,7 @@ def Tokenize(task_name, tokenizer, raw_dataset):
         sentence1_key, sentence2_key = TASKS_TO_KEYS[task_name]
         texts = ((examples[sentence1_key],) if sentence2_key is None else (
             examples[sentence1_key], examples[sentence2_key]))
-        result = tokenizer(*texts)
+        result = tokenizer(*texts, max_length=token_max_length, truncation=True)
         result["labels"] = examples["label"]
         return result
     preprocess_function = preprocess_function
