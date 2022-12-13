@@ -20,6 +20,9 @@ def parse_args():
                         help="Init type of adversarial perturbation.")
     parser.add_argument("--adv_init_epsilon", type=float, default=1e-5,
                         help="Init size of adversarial perturbation.")
+    parser.add_argument("--scheduler_type", type=str, default="linear",
+                        choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"],
+                        help="Warm up scheduler type.")                  
     parser.add_argument("--warm_up", type=float, default=0.1,
                         help="Proportion of warm up steps in total iterations.")
     parser.add_argument("--sampling_times_theta", type=int, default=20,
