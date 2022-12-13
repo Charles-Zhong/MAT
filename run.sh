@@ -1,4 +1,4 @@
-PY_FILE=MAT.py
+PY_FILE=MAT2.py
 
 TASK_NAME=CoLA
 MODEL_PATH=models

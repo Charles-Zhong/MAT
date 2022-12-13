@@ -27,7 +27,6 @@ model, dataloader, metric = preprocess.preprocess(args.task_name, local_model_pa
 train_dataloader, eval_dataloader, test_dataloader = dataloader
 model.to(device)
 
-
 total_iterations = args.epochs * len(train_dataloader)
 optimizer = torch.optim.SGD(model.parameters(), lr=args.sampling_step_theta)
 lr_scheduler = get_scheduler(name=args.scheduler_type, optimizer=optimizer, num_warmup_steps=args.warm_up * total_iterations, num_training_steps=total_iterations)
@@ -36,9 +35,7 @@ theta_noise_epsion = args.sampling_step_theta * args.sampling_noise_ratio
 delta_noise_epsion = args.sampling_step_delta * args.sampling_noise_ratio
 
 progress_bar = tqdm(range(total_iterations)) # 设置进度条
-
 eval_step = len(train_dataloader) // args.eval_times # 默认1个Epoch评估10次
-
 eval_metric_list = []  # 验证集metric列表
 eval_score_list = []  # 验证集score列表
 current_iteration = 0
@@ -56,7 +53,7 @@ print("="*18, "MAT Training", "="*18, file=file)  # MAT训练参数
 print("Adversarial_Training_type:", "MAT", file=file)
 print("Adversarial_init_type:", args.adv_init_type, file=file)
 print("Adversarial_init_epsilon:", args.adv_init_epsilon, file=file)
-print("Lr_scheduler:", args.lr_scheduler, file=file)
+print("Lr_scheduler_type:", args.scheduler_type, file=file)
 print("Warm_up:", args.warm_up, file=file)
 print("Sampling_times_theta:", args.sampling_times_theta, file=file)
 print("Sampling_times_delta:", args.sampling_times_delta, file=file)
@@ -138,7 +135,7 @@ for epoch in range(args.epochs):
             # SGLD采样并更新分布均值
             optimizer.step()
             for name, p in model.named_parameters():
-                lr_now = lr_scheduler.get_lr()
+                lr_now = lr_scheduler.get_last_lr()[0]
                 p.data = function.SGLD(p.data, lr_now, theta_noise_epsion)  # 将模型参数更新为新的采样
                 mean_theta[name] = args.beta_s * mean_theta[name] + (1 - args.beta_s) * p.data  # 更新模型参数的分布均值
         lr_scheduler.step()
