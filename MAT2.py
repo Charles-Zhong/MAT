@@ -36,9 +36,9 @@ total_iterations = args.epochs * len(train_dataloader)
 # 设置优化器
 if args.optimizer == "SGD":
     optim = torch.optim.SGD
-elif args.optim == "RMSprop":
+elif args.optimizer == "RMSprop":
     optim = torch.optim.RMSprop
-elif args.optim == "Adam":
+elif args.optimizer == "Adam":
     optim = torch.optim.Adam
 optimizer = optim(model.parameters(), lr=args.sampling_step_theta)
 lr_scheduler = transformers.get_scheduler(name=args.scheduler_type, optimizer=optimizer, num_warmup_steps=args.warm_up * total_iterations, num_training_steps=total_iterations)
