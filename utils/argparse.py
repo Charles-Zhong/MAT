@@ -20,6 +20,11 @@ def parse_args():
                         help="Init type of adversarial perturbation.")
     parser.add_argument("--adv_init_epsilon", type=float, default=1e-5,
                         help="Init size of adversarial perturbation.")
+    parser.add_argument("--adv_max_norm", type=float, default=1e-5,
+                        help="Max size of adversarial perturbation.")                    
+    parser.add_argument("--optimizer", type=str, default="SGD",
+                        choices=["SGD", "RMSprop", "Adam"],
+                        help="Optimizer type.")
     parser.add_argument("--scheduler_type", type=str, default="linear",
                         choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"],
                         help="Warm up scheduler type.")                  

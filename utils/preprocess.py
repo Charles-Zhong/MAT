@@ -96,7 +96,7 @@ def MakeDataloader(task_name, tokenizer, tokenized_dataset, batch_size):
     print("-" * 50)
     return (train_dataloader, eval_dataloader, test_dataloader)
 
-def preprocess(task_name, model_name, batch_size):
+def process(task_name, model_name, batch_size):
     raw_dataset, metric = LoadDataset(task_name)
     tokenizer, model = LoadModel(task_name, model_name)
     tokenized_dataset = Tokenize(task_name, tokenizer, raw_dataset)
