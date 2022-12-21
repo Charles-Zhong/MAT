@@ -39,7 +39,7 @@ if args.optimizer == "SGD":
 elif args.optimizer == "RMSprop":
     optim = torch.optim.RMSprop
 elif args.optimizer == "Adam":
-    optim = torch.optim.Adam
+    optim = torch.optim.AdamW
 optimizer = optim(model.parameters(), lr=args.sampling_step_theta)
 lr_scheduler = transformers.get_scheduler(name=args.scheduler_type, optimizer=optimizer, num_warmup_steps=args.warm_up * total_iterations, num_training_steps=total_iterations)
 
@@ -206,6 +206,9 @@ print("Best Metric:", eval_metric_list[eval_score_list.index(max(eval_score_list
 print("*"*50, file=file)
 file.close()
 
+if not os.path.exists("logs/" + args.task_name + "/" + args.task_name + "_" + args.model_name + ".csv"):
+    csv_file = open("logs/" + args.task_name + "/" + args.task_name + "_" + args.model_name + ".csv", "a")
+    print("run_time,seed,epochs,batch_size,optimizer,scheduler,warm_up,adv_init,adv_init_epsilon,adv_max_norm,times_theta,times_delta,step_theta,step_delta,noise_ratio,lambda,beta_s,beta_p,eval_times,score", file=csv_file)
 csv_file = open("logs/" + args.task_name + "/" + args.task_name + "_" + args.model_name + ".csv", "a") 
-print(run_time + "," + str(args.seed) + "," + str(args.epochs) + "," + str(args.batch_size) + "," + str(args.adv_init_type) + "," + str(args.adv_init_epsilon) + "," + str(args.warm_up) + "," + str(args.sampling_times_theta) + "," + str(args.sampling_times_delta) + "," + str(args.sampling_step_theta) + "," + str(args.sampling_step_delta) + "," + str(args.sampling_noise_ratio) + "," + str(args.lambda_s) + "," + str(args.beta_s) + "," + str(args.beta_p) + "," + str(args.eval_times) + "," + str(max(eval_score_list)), file=csv_file)
+print(run_time + "," + str(args.seed) + "," + str(args.epochs) + "," + str(args.batch_size) + "," + str(args.optimizer) + "," + str(args.scheduler_type) + "," + str(args.warm_up) + "," + str(args.adv_init_type) + "," + str(args.adv_init_epsilon) + "," + str(args.adv_max_norm) + "," + str(args.sampling_times_theta) + "," + str(args.sampling_times_delta) + "," + str(args.sampling_step_theta) + "," + str(args.sampling_step_delta) + "," + str(args.sampling_noise_ratio) + "," + str(args.lambda_s) + "," + str(args.beta_s) + "," + str(args.beta_p) + "," + str(args.eval_times) + "," + str(max(eval_score_list)), file=csv_file)
 csv_file.close()
