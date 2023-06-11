@@ -38,7 +38,6 @@ TASKS_TO_LABELS = {"CoLA": ("0", "1"), "SST-2": ("0", "1"), "MRPC": ("0", "1"), 
 DATASETS_TO_METRICS = {"glue":"glue", "anli":"accuracy"}
 
 def LoadDataset(task_name):
-    # 加载数据集
     print("-" * 16, "load the dataset", "-" * 16)
     print("[Notice]: loading dataset...")
     dataset_name = TASKS_TO_DATASETS[task_name]
@@ -51,7 +50,6 @@ def LoadDataset(task_name):
     return raw_dataset, metric
 
 def LoadModel(task_name, model_name):
-    # 加载tokenizer和model
     print("-" * 8, "load the tokenizer and the model", "-" * 8)
     print("[Notice]: loading tokenizer and model...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -64,7 +62,6 @@ def LoadModel(task_name, model_name):
 def Tokenize(task_name, tokenizer, raw_dataset):
     print("-" * 14, "tokenize the dataset", "-" * 14)
     print("[Notice]: tokenizing the dataset...")
-    # Tokenize文本
     def preprocess_function(examples):
         sentence1_key, sentence2_key = TASKS_TO_KEYS[task_name]
         texts = ((examples[sentence1_key],) if sentence2_key is None else (
@@ -80,14 +77,12 @@ def Tokenize(task_name, tokenizer, raw_dataset):
     return tokenized_dataset
 
 def MakeDataloader(task_name, tokenizer, tokenized_dataset, batch_size):
-    # 设置训练集、验证集、测试集
     print("-" * 14, "make the dataloader", "-" * 15)
     print("[Notice]: making dataloader...")
     train_key, validation_key, test_key = TASKS_TO_DATASETS_KEY[task_name]
     train_dataset = tokenized_dataset[train_key]
     val_dataset = tokenized_dataset[validation_key]
     test_dataset = tokenized_dataset[test_key]
-    # 创建dataloader
     data_collator = DataCollatorWithPadding(tokenizer)
     train_dataloader = DataLoader(train_dataset, collate_fn=data_collator, shuffle=True, batch_size=batch_size)
     eval_dataloader = DataLoader(val_dataset, collate_fn=data_collator, batch_size=batch_size)
